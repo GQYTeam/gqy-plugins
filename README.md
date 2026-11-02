@@ -22,13 +22,12 @@ GQY 插件在线目录与 `gqy-plugin` CLI。
 # 1. 先安装 CLI
 go install github.com/GQYTeam/gqy-plugins/cmd/gqy-plugin@latest
 
-# 2. 浏览
-gqy-plugin list
-gqy-plugin search 图片
-gqy-plugin info show-images-default
+# 2. 浏览（二进制默认在 $(go env GOPATH)/bin）
+"$(go env GOPATH)/bin/gqy-plugin" list
+"$(go env GOPATH)/bin/gqy-plugin" search 图片
 
 # 3. 安装并自动通知 GQY 重新扫描、加载插件
-gqy-plugin install show-images-default \
+"$(go env GOPATH)/bin/gqy-plugin" install show-images-default \
   --server http://127.0.0.1:5173 --load
 ```
 

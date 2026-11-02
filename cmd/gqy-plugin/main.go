@@ -75,7 +75,7 @@ func printHelp() {
 
 示例:
   go install github.com/GQYTeam/gqy-plugins/cmd/gqy-plugin@latest
-  gqy-plugin install show-images-default --server http://127.0.0.1:5173 --load
+  "$(go env GOPATH)/bin/gqy-plugin" install show-images-default --server http://127.0.0.1:5173 --load
 
 安装只把文件原子放到 $GQY_HOME/plugins/<id>/；不加 --load 时默认不自动加载。
 `)

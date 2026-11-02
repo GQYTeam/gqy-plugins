@@ -32,7 +32,7 @@
         <div class="terminal" aria-label="快速安装">
           <div class="terminal-head"><span><i></i><i></i><i></i></span><span>TRY IT NOW</span></div>
           <pre id="hero-command"><span class="prompt">$</span> go install github.com/GQYTeam/gqy-plugins/cmd/gqy-plugin@latest
-<span class="prompt">$</span> gqy-plugin install &lt;id&gt; --server http://127.0.0.1:5173 --load</pre>
+<span class="prompt">$</span> "$(go env GOPATH)/bin/gqy-plugin" install &lt;id&gt; --server http://127.0.0.1:5173 --load</pre>
           <button type="button" class="terminal-copy" data-hero-copy aria-label="复制 CLI 安装命令">复制</button>
         </div>
         <p class="terminal-note">命令会先安装 CLI，再用 CLI 安装插件；安装完成后自动触发 reload 与 load。</p>

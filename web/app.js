@@ -9,7 +9,7 @@ const heroCommandEl = document.getElementById('hero-command');
 
 const CLI_INSTALL = 'go install github.com/GQYTeam/gqy-plugins/cmd/gqy-plugin@latest';
 const GQY_SERVER = 'http://127.0.0.1:5173';
-const HERO_COMMAND = `${CLI_INSTALL}\ngqy-plugin install <id> --server ${GQY_SERVER} --load`;
+const HERO_COMMAND = `${CLI_INSTALL}\n"$(go env GOPATH)/bin/gqy-plugin" install <id> --server ${GQY_SERVER} --load`;
 
 let plugins = [];
 
@@ -50,7 +50,7 @@ function formatSize(bytes) {
 }
 
 function installCommand(id, version) {
-  return `${CLI_INSTALL} && gqy-plugin install ${id}@${version} --server ${GQY_SERVER} --load`;
+  return `${CLI_INSTALL} && "$(go env GOPATH)/bin/gqy-plugin" install ${id}@${version} --server ${GQY_SERVER} --load`;
 }
 
 function iconSVG(id) {

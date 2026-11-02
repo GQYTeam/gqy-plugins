@@ -29,7 +29,7 @@ web/
 
 ```bash
 go install github.com/GQYTeam/gqy-plugins/cmd/gqy-plugin@latest
-gqy-plugin install <id>@<version> --server http://127.0.0.1:5173 --load
+"$(go env GOPATH)/bin/gqy-plugin" install <id>@<version> --server http://127.0.0.1:5173 --load
 ```
 
 - 卡片按钮“安装并加载”复制包含 `&&` 的完整两段命令；不会在浏览器执行任何本地程序。

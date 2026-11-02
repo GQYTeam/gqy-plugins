@@ -58,6 +58,15 @@
 - 显式 `workflow_dispatch` 触发 CI，因为 bot 创建的分支 push 不会自动触发其它 workflow。
 - 不包含自动合并步骤；外部 PR 必须通过 CI 且完成一次人工评审。
 
+### 自动化身份
+
+组织策略禁止 `GITHUB_TOKEN` 创建或批准 PR，因此 `external-plugin-pr.yml` 使用仓库 secret `AUTO_PR_TOKEN` 调用 `gh pr create` / `gh issue comment` / `gh workflow run`。
+
+- token 需要对该仓库有 contents / pull-requests / issues / actions 写权限；当前使用组织维护者账号的 repo token。
+- secret 只在默认分支的 workflow 中注入，issue 正文不能执行代码。
+- token 不打印、不落盘；泄露时立即轮换。
+- 如果 secret 缺失，workflow 会在创建 PR 阶段失败，但不会写入 main。
+
 ## 5. 目录字段
 
 ```json

@@ -10,7 +10,7 @@
 - `gqy-plugin sync-org`：扫描 `GQYTeam/gqy-plugins-*` 公开仓库，使用默认分支 HEAD 的 commit-pinned tarball，计算 SHA-256 / size 并自动写目录。
 - `gqy-plugin add-external`：解析插件收录 issue，校验同仓库 GitHub Release 产物，自动写入待 PR 的外部条目。
 - `.github/workflows/publish-catalog.yml`：main 更新 / 每 6 小时 / 手动触发；同步组织内插件，生成 `published:registry.json` 并部署 Pages。
-- `.github/workflows/external-plugin-pr.yml`：issue / dispatch 触发，自动创建或更新外部插件 PR，没有合并步骤。
+- `.github/workflows/external-plugin-pr.yml`：issue / dispatch 触发，使用 `AUTO_PR_TOKEN` 自动创建或更新外部插件 PR，没有合并步骤。
 - `internal/catalog/`：GitHub 组织发现、HEAD tarball、产物下载解包、来源校验、同版本冲突保护与目录原子写入。
 - 目录新增 `github-account-default@1.0.0`，由组织内自动收录使用 commit-pinned tarball。
 

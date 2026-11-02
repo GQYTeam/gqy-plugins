@@ -28,6 +28,7 @@
 - **安全解包。** 安装器拒绝绝对路径、`..` 路径穿越、符号链接、设备文件、超大包与超量文件。
 - **来源分层。** 组织内自动收录只扫描公开的 `GQYTeam/gqy-plugins-*` 仓库；组织外提交必须由自动 PR 进入人工评审。外部命令拒绝 `GQYTeam` 仓库，不能绕过组织内治理。
 - **同步 bot 权限。** main ruleset 仅保留管理员应急 bypass；组织同步不写 main，只把生成目录 fast-forward 到 `published` 分支。`published` 禁止强推与删除；外部 PR workflow 没有合并步骤。
+- **外部 PR 自动化 token。** 组织策略禁止 GitHub Actions 默认 token 创建 PR，因此外部 PR workflow 使用仓库 secret `AUTO_PR_TOKEN`。该 token 只在默认分支 workflow 中注入，不打印、不落盘；泄露时必须立即轮换。
 
 ## 提交者注意
 

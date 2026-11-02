@@ -140,9 +140,12 @@ gqy-plugin verify --strict --artifacts
 make check        # gofmt + vet + test + build + web 语法 + strict 目录校验
 make test
 make build        # dist/gqy-plugin
-make package      # 重新打包两个官方插件
+make package      # 重新打包两个官方插件（默认读取相邻插件仓库）
+SHOW_DIR=/path/to/show EMOTE_DIR=/path/to/emote make package
 make clean
 ```
+
+`make package` 默认从组织工作区中相邻的 `gqy-plugins-ShowImages-default/` 与 `gqy-plugins-EmotePack-default/` 读取源码；单独克隆本仓库时用 `SHOW_DIR` / `EMOTE_DIR` 覆盖。
 
 CI 在 Linux 上跑 Go 1.22 与 stable 矩阵，并额外下载 Release 产物做完整性验证。Pages 只发布 `web/` 与根 `registry.json`。
 

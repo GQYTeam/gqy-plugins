@@ -55,7 +55,7 @@ jobs:
         run: go run ./cmd/gqy-plugin verify --registry registry.json --strict
 
       - name: Configure Pages
-        uses: actions/configure-pages@v5
+        uses: actions/configure-pages@v6
 
       - name: Assemble static site
         run: |

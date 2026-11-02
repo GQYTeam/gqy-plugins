@@ -1,0 +1,17 @@
+# 构建产物
+/dist/
+*.test
+coverage.out
+
+# Go 工作区文件
+go.work
+go.work.sum
+
+# 系统与编辑器
+.DS_Store
+.idea/
+.vscode/
+*.swp
+
+# 本地环境与密钥
+.env

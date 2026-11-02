@@ -1,0 +1,58 @@
+# golangci-lint v2 配置（参考 GQY/app/.golangci.yml，按本仓库裁剪）。
+# CI 只跑 gofmt / go vet / go test / go build；本地想跑完整静态检查时：
+#   golangci-lint run
+version: "2"
+
+run:
+  timeout: 5m
+  tests: true
+
+linters:
+  default: standard
+  enable:
+    - bodyclose
+    - errorlint
+    - gocritic
+    - gosec
+    - misspell
+    - nilerr
+    - revive
+    - unconvert
+    - unparam
+  settings:
+    gosec:
+      excludes:
+        - G104
+        # 目录按调用方给出的本地路径 / URL 读取，这是本工具的正常输入面；
+        # 远程来源只做 GET 拉取，不执行下载内容。
+        - G304
+        - G204
+        - G703
+    revive:
+      rules:
+        - name: blank-imports
+        - name: context-as-argument
+        - name: context-keys-type
+        - name: error-return
+        - name: error-strings
+        - name: error-naming
+        - name: increment-decrement
+        - name: var-naming
+        - name: var-declaration
+        - name: range
+        - name: receiver-naming
+        - name: time-naming
+        - name: indent-error-flow
+        - name: errorf
+  exclusions:
+    rules:
+      - path: _test\.go
+        linters:
+          - errcheck
+          - gosec
+          - unparam
+          - gocritic
+
+issues:
+  max-issues-per-linter: 0
+  max-same-issues: 0

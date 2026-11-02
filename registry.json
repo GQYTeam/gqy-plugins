@@ -1,12 +1,12 @@
 {
   "schema_version": 1,
-  "updated_at": "2026-11-02T14:14:18Z",
+  "updated_at": "2026-11-02T15:18:24Z",
   "plugins": [
     {
       "id": "emote-pack-default",
       "name": "表情包插件",
-      "summary": "预置 24 张 512×512 表情与 4 个动图；支持列出清单、按名称展示（可内联 data URI）与按词语确定性打分匹配，供对话与产物展示使用",
-      "description": "预置 24 张 512×512 表情与 4 个动图；支持列出清单、按名称展示（可内联 data URI）与按词语确定性打分匹配，供对话与产物展示使用",
+      "summary": "预置 24 张 512×512 表情与 4 个动图；支持列清单、按名称展示（可内联 data URI）、按词语确定性匹配，以及按语境推荐表情（本地小模型）",
+      "description": "预置 24 张 512×512 表情与 4 个动图；支持列清单、按名称展示（可内联 data URI）、按词语确定性匹配，以及按语境推荐表情（本地小模型）",
       "homepage": "https://github.com/GQYTeam/gqy-plugins-EmotePack-default",
       "source_type": "org",
       "repository": "https://github.com/GQYTeam/gqy-plugins-EmotePack-default",
@@ -17,6 +17,22 @@
         "对话"
       ],
       "versions": [
+        {
+          "version": "1.2.0",
+          "channel": "stable",
+          "published_at": "2026-11-02T15:18:24Z",
+          "mode": "resident",
+          "protocol": "gqy-jsonrpc-v1",
+          "actions": [
+            "list",
+            "show",
+            "match",
+            "suggest"
+          ],
+          "url": "https://api.github.com/repos/GQYTeam/gqy-plugins-EmotePack-default/tarball/36fc22e6270d3d9f322216aca04e51da1f877a90",
+          "sha256": "384eb9f6730da5e41d4ccc27e47d0bd3b49f2ffa9a6dcda429b2e8a36d873696",
+          "size": 14510268
+        },
         {
           "version": "1.0.0",
           "channel": "stable",

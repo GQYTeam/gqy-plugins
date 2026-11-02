@@ -86,3 +86,12 @@ footer p { margin: 0; }
   .count { margin-top: 12px; }
   .quickstart code { font-size: .72rem; }
 }
+
+.meta { display: flex; flex-wrap: wrap; gap: 8px; align-items: center; }
+.source { display: inline-flex; align-items: center; border-radius: 999px; padding: 3px 8px; font-size: .72rem; font-weight: 700; }
+.source.org { background: color-mix(in srgb, #2f9e68 18%, transparent); color: #2f9e68; }
+.source.external { background: color-mix(in srgb, #b7791f 20%, transparent); color: #b7791f; }
+@media (prefers-color-scheme: dark) {
+  .source.org { color: #7ee2a8; }
+  .source.external { color: #f6c96b; }
+}

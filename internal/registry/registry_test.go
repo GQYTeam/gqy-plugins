@@ -68,7 +68,7 @@ func TestParseRepositoryRegistry(t *testing.T) {
 		t.Fatal("plugins 为 nil，期望数组")
 	}
 	if len(doc.Plugins) < 2 {
-		t.Fatalf("plugins 长度 = %d，至少应收录两个官方插件", len(doc.Plugins))
+		t.Fatalf("plugins 长度 = %d，至少应收录三个组织内插件", len(doc.Plugins))
 	}
 	seen := make(map[string]bool)
 	for _, p := range doc.Plugins {

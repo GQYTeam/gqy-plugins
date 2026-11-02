@@ -2,7 +2,27 @@
 
 格式参照 [Keep a Changelog](https://keepachangelog.com/zh-CN/1.1.0/)，版本遵循 [语义化版本](https://semver.org/lang/zh-CN/)。
 
-## [Unreleased]
+## [0.2.0] - 2026-11-02
+
+### Added
+
+- 目录新增 `source_type`（`org` / `external`）与 `repository` 来源字段，站点展示“组织内自动收录 / 外部 PR 收录”。
+- `gqy-plugin sync-org`：扫描 `GQYTeam/gqy-plugins-*` 公开仓库，使用默认分支 HEAD 的 commit-pinned tarball，计算 SHA-256 / size 并自动写目录。
+- `gqy-plugin add-external`：解析插件收录 issue，校验同仓库 GitHub Release 产物，自动写入待 PR 的外部条目。
+- `.github/workflows/sync-org-plugins.yml`：每 6 小时自动收录组织内插件，直接提交 main，并显式触发 CI 与 Pages。
+- `.github/workflows/external-plugin-pr.yml`：issue / dispatch 触发，自动创建或更新外部插件 PR，没有合并步骤。
+- `internal/catalog/`：GitHub 组织发现、HEAD tarball、产物下载解包、来源校验、同版本冲突保护与目录原子写入。
+- 目录新增 `github-account-default@1.0.0`，由组织内自动收录使用 commit-pinned tarball。
+
+### Changed
+
+- 组织内收录不再需要 PR；组织外收录一律走自动 PR。
+- `main` 保护从经典 branch protection 迁移为 ruleset：保留一次评审与两个 Go check；管理员和 `github-actions[bot]` 可 bypass，仅供同步 workflow 使用。
+- README、设计、蓝图、协议参考、Issue 模板、CONTRIBUTING 与 Makefile 对齐新收录策略。
+
+### Fixed
+
+- 安全解包接受 GitHub tarball 的 PAX 扩展头（`pax_global_header`），仍拒绝符号链接、设备文件与越界路径。
 
 ## [0.1.0] - 2026-11-02
 

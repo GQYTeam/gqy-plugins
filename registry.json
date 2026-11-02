@@ -1,14 +1,21 @@
 {
   "schema_version": 1,
-  "updated_at": "2026-11-02T21:25:00+08:00",
+  "updated_at": "2026-11-02T14:00:02Z",
   "plugins": [
     {
-      "id": "show-images-default",
-      "name": "图片展示示例",
-      "summary": "预置 13 张风格化示例图，提供 list / show 动作，供对话与产物灯箱展示。",
-      "description": "GQY 官方图片展示插件。零依赖 Node 运行时，stdio 换行 JSON-RPC；show 支持 inline=true 返回 data URI。",
-      "homepage": "https://github.com/GQYTeam/gqy-plugins-ShowImages-default",
-      "tags": ["图片", "示例", "产物", "展示"],
+      "id": "emote-pack-default",
+      "name": "表情包插件",
+      "summary": "预置 24 张 512×512 表情与 4 个动图；支持列出清单、按名称展示（可内联 data URI）与按词语确定性打分匹配，供对话与产物展示使用",
+      "description": "预置 24 张 512×512 表情与 4 个动图；支持列出清单、按名称展示（可内联 data URI）与按词语确定性打分匹配，供对话与产物展示使用",
+      "homepage": "https://github.com/GQYTeam/gqy-plugins-EmotePack-default",
+      "source_type": "org",
+      "repository": "https://github.com/GQYTeam/gqy-plugins-EmotePack-default",
+      "tags": [
+        "表情包",
+        "图片",
+        "匹配",
+        "对话"
+      ],
       "versions": [
         {
           "version": "1.0.0",
@@ -16,22 +23,64 @@
           "published_at": "2026-11-02T21:25:00+08:00",
           "mode": "resident",
           "protocol": "gqy-jsonrpc-v1",
-          "actions": ["list", "show"],
-          "provides": [],
-          "requires": [],
-          "url": "https://github.com/GQYTeam/gqy-plugins/releases/download/v0.1.0/show-images-default-1.0.0.tar.gz",
-          "sha256": "cc5b425a3e22cff38a37d5513ec516a916b4156bd30c88ee729ff33dcbf5e156",
-          "size": 31375314
+          "actions": [
+            "list",
+            "show",
+            "match"
+          ],
+          "url": "https://github.com/GQYTeam/gqy-plugins/releases/download/v0.1.0/emote-pack-default-1.0.0.tar.gz",
+          "sha256": "f66f08d97c337e6e077570b06fe39f755e1587eb99d04b1f6d60930707a3993c",
+          "size": 14355403
         }
       ]
     },
     {
-      "id": "emote-pack-default",
-      "name": "表情包插件",
-      "summary": "预置 24 张表情与 4 个动图，提供 list / show / match 动作。",
-      "description": "GQY 官方表情包插件。零依赖 Node 运行时；match 按标签确定性打分，show 支持内联 data URI。",
-      "homepage": "https://github.com/GQYTeam/gqy-plugins-EmotePack-default",
-      "tags": ["表情包", "图片", "匹配", "对话"],
+      "id": "github-account-default",
+      "name": "GitHub 账号（顾清影 专属）",
+      "summary": "为 顾清影 专属的 GitHub 账号插件：远程设备码授权后在本机完成登录，gh 与 git 全程走隔离配置目录（GH_CONFIG_DIR / GIT_CONFIG_GLOBAL），提供 status / login / login-wait / logout / env / gh / git 七个动作",
+      "description": "为 顾清影 专属的 GitHub 账号插件：远程设备码授权后在本机完成登录，gh 与 git 全程走隔离配置目录（GH_CONFIG_DIR / GIT_CONFIG_GLOBAL），提供 status / login / login-wait / logout / env / gh / git 七个动作",
+      "homepage": "https://github.com/GQYTeam/gqy-plugins-GitHubAccount-default",
+      "source_type": "org",
+      "repository": "https://github.com/GQYTeam/gqy-plugins-GitHubAccount-default",
+      "tags": [
+        "组织内"
+      ],
+      "versions": [
+        {
+          "version": "1.0.0",
+          "channel": "stable",
+          "published_at": "2026-11-02T14:00:02Z",
+          "mode": "resident",
+          "protocol": "gqy-jsonrpc-v1",
+          "actions": [
+            "status",
+            "login",
+            "login-wait",
+            "logout",
+            "env",
+            "gh",
+            "git"
+          ],
+          "url": "https://api.github.com/repos/GQYTeam/gqy-plugins-GitHubAccount-default/tarball/acf5db5e942a744dd7a0f0e94303c705d21a840a",
+          "sha256": "fdf906351a4af5119ae46fe3834c5d8d2c7dd10e4cf33d6f02d5ebb7f4fe2473",
+          "size": 88369
+        }
+      ]
+    },
+    {
+      "id": "show-images-default",
+      "name": "图片展示示例",
+      "summary": "预置 13 张风格化示例图，供产物灯箱与对话里的图片展示使用",
+      "description": "预置 13 张风格化示例图，供产物灯箱与对话里的图片展示使用",
+      "homepage": "https://github.com/GQYTeam/gqy-plugins-ShowImages-default",
+      "source_type": "org",
+      "repository": "https://github.com/GQYTeam/gqy-plugins-ShowImages-default",
+      "tags": [
+        "图片",
+        "示例",
+        "产物",
+        "展示"
+      ],
       "versions": [
         {
           "version": "1.0.0",
@@ -39,12 +88,13 @@
           "published_at": "2026-11-02T21:25:00+08:00",
           "mode": "resident",
           "protocol": "gqy-jsonrpc-v1",
-          "actions": ["list", "show", "match"],
-          "provides": [],
-          "requires": [],
-          "url": "https://github.com/GQYTeam/gqy-plugins/releases/download/v0.1.0/emote-pack-default-1.0.0.tar.gz",
-          "sha256": "f66f08d97c337e6e077570b06fe39f755e1587eb99d04b1f6d60930707a3993c",
-          "size": 14355403
+          "actions": [
+            "list",
+            "show"
+          ],
+          "url": "https://github.com/GQYTeam/gqy-plugins/releases/download/v0.1.0/show-images-default-1.0.0.tar.gz",
+          "sha256": "cc5b425a3e22cff38a37d5513ec516a916b4156bd30c88ee729ff33dcbf5e156",
+          "size": 31375314
         }
       ]
     }

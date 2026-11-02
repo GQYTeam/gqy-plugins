@@ -1,5 +1,5 @@
 #!/bin/sh
-# 构建两个官方插件的确定性 tar.gz 与 checksums.txt；产物在 dist/，不提交到 Git。
+# 构建两个带 Release 的官方插件的确定性 tar.gz 与 checksums.txt；产物在 dist/，不提交到 Git。
 set -eu
 cd "$(dirname "$0")/.."
 make package

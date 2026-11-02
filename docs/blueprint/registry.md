@@ -41,6 +41,8 @@
 | `description` | 否 | 长描述 |
 | `homepage` | 否 | http(s) 绝对地址；strict 模式要求 https |
 | `tags` | 否 | 字符串数组，元素非空 |
+| `source_type` | 否 | `org` / `external`；出现时必须带 `repository` |
+| `repository` | 否 | 来源仓库 http(s) 绝对地址；strict 要求 https |
 | `versions` | 是 | 至少一项，版本号不重复 |
 
 版本：
@@ -87,6 +89,18 @@
 | `gqy-plugin verify --artifacts` | 逐版本下载产物，核对 sha256、size、包内 manifest |
 | `make check` / CI | strict 元数据校验，不下载大产物 |
 
-## 8. 当前官方条目
+## 8. 来源分层
 
-`registry.json` 收录 `show-images-default@1.0.0` 与 `emote-pack-default@1.0.0`，产物由 `v0.1.0` Release 托管。新增条目必须先上传真实产物，再计算哈希，禁止占位值。
+- `source_type=org`：由 `gqy-plugin sync-org` 扫描 `GQYTeam/gqy-plugins-*` 公开仓库生成，直接写入 main。
+- `source_type=external`：由 `external-plugin-pr.yml` 验证外部 GitHub Release 后生成 PR，人工评审合入。
+- 发现同 id 同版本但 URL / SHA-256 不同：保留旧产物并报告冲突，必须发布新版本。
+
+## 9. 当前官方条目
+
+`registry.json` 自动收录三个组织内插件：
+
+- `emote-pack-default@1.0.0`
+- `github-account-default@1.0.0`（commit-pinned tarball）
+- `show-images-default@1.0.0`
+
+前两个仓库的已有 Release 产物保持不变；没有 Release 的组织插件使用 commit-pinned tarball。新增条目禁止占位值。

@@ -26,6 +26,8 @@
 - **安装默认不执行。** `gqy-plugin install` 只落文件；只有显式 `--load` 或后续管理接口才启动插件。
 - **只从可信 HTTPS 来源下载。** 发布门禁的 strict 模式要求产物 URL 为 HTTPS 绝对地址。
 - **安全解包。** 安装器拒绝绝对路径、`..` 路径穿越、符号链接、设备文件、超大包与超量文件。
+- **来源分层。** 组织内自动收录只扫描公开的 `GQYTeam/gqy-plugins-*` 仓库；组织外提交必须由自动 PR 进入人工评审。外部命令拒绝 `GQYTeam` 仓库，不能绕过组织内治理。
+- **同步 bot 权限。** main ruleset 仅允许管理员与 `github-actions[bot]` bypass，同步 workflow 是唯一依赖该 bypass 的自动写 main 路径；外部 PR workflow 没有合并步骤。
 
 ## 提交者注意
 

@@ -8,7 +8,7 @@ import (
 )
 
 // version 可在构建时用 -ldflags "-X main.version=..." 覆盖。
-var version = "0.1.0"
+var version = "0.2.0"
 
 func main() {
 	if err := run(os.Args[1:]); err != nil {
@@ -35,6 +35,10 @@ func run(args []string) error {
 		return runVerify(args[1:])
 	case "package":
 		return runPackage(args[1:])
+	case "sync-org":
+		return runSyncOrg(args[1:])
+	case "add-external":
+		return runAddExternal(args[1:])
 	case "version", "--version", "-v":
 		fmt.Println("gqy-plugin " + version)
 		return nil
@@ -58,12 +62,16 @@ func printHelp() {
                      [--server URL] [--token TOKEN] [--load] [--json]
   gqy-plugin verify  [--registry URL|PATH] [--strict] [--artifacts] [--json]
   gqy-plugin package <插件目录> [--output PATH] [--json]
+  gqy-plugin sync-org [--org GQYTeam] [--registry PATH] [--json]
+  gqy-plugin add-external --repository URL --artifact-url URL [--issue-body PATH]
+                           [--registry PATH] [--json]
   gqy-plugin version
 
 环境变量:
   GQY_PLUGIN_REGISTRY  目录地址，默认官方 main 分支的 registry.json
   GQY_HOME             GQY 数据目录，默认 ~/.gqy
   GQY_AUTH_TOKEN       GQY 管理接口令牌（也可用 --token）
+  GITHUB_TOKEN         组织插件自动收录用的 GitHub API token
 
 安装只把文件原子放到 $GQY_HOME/plugins/<id>/；默认不自动加载。
 `)

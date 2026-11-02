@@ -13,6 +13,8 @@
 | `cmd/gqy-plugin/install.go` | `install` 参数、目录解析、可选 GQY reload/load |
 | `cmd/gqy-plugin/verify.go` | 目录 strict 校验与产物校验 |
 | `cmd/gqy-plugin/package.go` | 确定性打包 |
+| `cmd/gqy-plugin/sync_org.go` | 组织内插件自动收录 |
+| `cmd/gqy-plugin/add_external.go` | 外部 issue 解析与候选目录写入 |
 | `internal/manifest` | 包内 `manifest.json` 的 P3 核心校验 |
 | `internal/archive` | 确定性 tar.gz 打包、安全解包、插件根定位 |
 | `internal/install` | 下载、SHA-256、原子安装、产物校验 |
@@ -36,6 +38,15 @@ gqy-plugin install show-images-default --server http://127.0.0.1:5173 --load
 gqy-plugin verify --strict
 gqy-plugin verify --artifacts
 gqy-plugin package ./my-plugin --output dist/my-plugin-1.0.0.tar.gz
+
+# 组织内自动收录（CI 使用；需要 GITHUB_TOKEN）
+gqy-plugin sync-org --org GQYTeam --registry registry.json --json
+
+# 外部提交校验（workflow 使用；只写候选目录，不推送）
+gqy-plugin add-external \
+  --repository https://github.com/acme/gqy-demo \
+  --artifact-url https://github.com/acme/gqy-demo/releases/download/v1.0.0/gqy-demo-1.0.0.tar.gz \
+  --registry registry.json --json
 ```
 
 环境变量：
@@ -46,6 +57,7 @@ gqy-plugin package ./my-plugin --output dist/my-plugin-1.0.0.tar.gz
 | `GQY_HOME` | 安装根，实际目标 `$GQY_HOME/plugins/<id>` |
 | `GQY_AUTH_TOKEN` | 管理接口 Bearer token |
 | `GQY_URL` | `--server` 的默认值 |
+| `GITHUB_TOKEN` | `sync-org` 读取组织仓库与 commit tarball |
 
 ## 4. 安装顺序
 
@@ -85,3 +97,5 @@ gqy-plugin package ./my-plugin --output dist/my-plugin-1.0.0.tar.gz
 - `--server` 通知失败不推翻已经成功的安装，作为 warning 输出；安装事实不回滚。
 - `--dry-run` 结果中 `dry_run: true`，目录不改变。
 - 日志与错误不输出 token；GQY 管理接口使用 `Authorization: Bearer`，token 只来自 flag 或环境变量。
+- 组织内同步只处理 `source_type=org`；外部命令拒绝 `GQYTeam` 仓库。
+- 同版本产物冲突不覆盖，返回明确错误或冲突报告。

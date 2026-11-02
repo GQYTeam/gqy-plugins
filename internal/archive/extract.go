@@ -81,6 +81,9 @@ func ExtractTarGz(r io.Reader, dest string) error {
 			if err := f.Close(); err != nil {
 				return err
 			}
+		case tar.TypeXHeader, tar.TypeXGlobalHeader, tar.TypeGNULongName, tar.TypeGNULongLink:
+			// PAX / GNU 扩展头只影响后续条目的名字，不解包为文件。
+			continue
 		default:
 			return fmt.Errorf("archive: 不允许的条目类型: %s", hdr.Name)
 		}

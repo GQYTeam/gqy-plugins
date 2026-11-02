@@ -124,3 +124,39 @@ func TestExtractRejectsTraversal(t *testing.T) {
 		t.Fatalf("越界路径应被拒绝，得到: %v", err)
 	}
 }
+
+func TestExtractSkipsPAXMetadataHeaders(t *testing.T) {
+	path := filepath.Join(t.TempDir(), "pax.tar.gz")
+	f, err := os.Create(path)
+	if err != nil {
+		t.Fatal(err)
+	}
+	gz := gzip.NewWriter(f)
+	tw := tar.NewWriter(gz)
+	if err := tw.WriteHeader(&tar.Header{Typeflag: tar.TypeXGlobalHeader, PAXRecords: map[string]string{"comment": "github archive"}}); err != nil {
+		t.Fatal(err)
+	}
+	body := []byte("ok")
+	if err := tw.WriteHeader(&tar.Header{Name: "manifest.json", Typeflag: tar.TypeReg, Mode: 0o644, Size: int64(len(body))}); err != nil {
+		t.Fatal(err)
+	}
+	if _, err := tw.Write(body); err != nil {
+		t.Fatal(err)
+	}
+	_ = tw.Close()
+	_ = gz.Close()
+	_ = f.Close()
+	ef, err := os.Open(path)
+	if err != nil {
+		t.Fatal(err)
+	}
+	defer ef.Close()
+	dst := t.TempDir()
+	if err := ExtractTarGz(ef, dst); err != nil {
+		t.Fatalf("PAX 扩展头应被跳过: %v", err)
+	}
+	got, err := os.ReadFile(filepath.Join(dst, "manifest.json"))
+	if err != nil || string(got) != "ok" {
+		t.Fatalf("manifest.json = %q, %v", got, err)
+	}
+}

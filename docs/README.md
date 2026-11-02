@@ -13,4 +13,5 @@
 
 - 在线目录：[`reference/registry-schema.md`](reference/registry-schema.md)
 - 安装器与打包：[`blueprint/installer.md`](blueprint/installer.md)
+- 自动收录与外部 PR：[`blueprint/automation.md`](blueprint/automation.md)
 - 发布与信任边界：[`designs/01-在线收录与安装.md`](designs/01-在线收录与安装.md)

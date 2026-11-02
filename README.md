@@ -9,7 +9,9 @@ GQY 插件在线目录与 `gqy-plugin` CLI。
 - **目录源文件**：[`registry.json`](registry.json)
 - **主程序**：[GQYTeam/GQY](https://github.com/GQYTeam/GQY)
 
-目录是唯一事实来源。静态站点和 CLI 都读同一份 `registry.json`，每个安装包都带不可变 Release URL、SHA-256 与大小。
+目录是唯一事实来源。静态站点和 CLI 都读同一份 `registry.json`，每个安装包都带不可变 URL、SHA-256 与大小。
+
+收录分两条线：**组织内公开插件自动收录**；**组织外在线仓库一律自动生成 PR**，不会直接写入 main。
 
 ## 快速开始
 
@@ -44,8 +46,13 @@ gqy-plugin install emote-pack-default
 | --- | --- | --- | --- |
 | `show-images-default` | 1.0.0 | `list` / `show` | [Release v0.1.0](https://github.com/GQYTeam/gqy-plugins/releases/tag/v0.1.0) |
 | `emote-pack-default` | 1.0.0 | `list` / `show` / `match` | [Release v0.1.0](https://github.com/GQYTeam/gqy-plugins/releases/tag/v0.1.0) |
+| `github-account-default` | 1.0.0 | `status` / `login` / `login-wait` / `logout` / `env` / `gh` / `git` | 组织源码归档（commit-pinned tarball） |
 
-新增条目必须先有真实可下载产物，再登记真实 `sha256` 与 `size`；禁止占位值。流程见下文。
+**收录规则：**
+
+- `GQYTeam/gqy-plugins-*` 公开插件仓库：`sync-org-plugins.yml` 每 6 小时扫描一次，自动校验并直接提交 `registry.json`。
+- 组织外 GitHub 仓库：通过「插件收录申请」issue 或手动 dispatch 触发 `external-plugin-pr.yml`，自动生成 PR；必须 CI 全绿 + 一次人工评审。
+- 已有同 `id@version` 的产物不可替换；想更新必须发布新版本。
 
 ## 安装语义
 
@@ -77,6 +84,8 @@ gqy-plugin install emote-pack-default --json
       "name": "图片展示示例",
       "summary": "一句话简介",
       "tags": ["图片"],
+      "source_type": "org",
+      "repository": "https://github.com/GQYTeam/gqy-plugins-ShowImages-default",
       "versions": [
         {
           "version": "1.0.0",
@@ -95,7 +104,7 @@ gqy-plugin install emote-pack-default --json
 
 完整字段、版本选择与 strict 规则见 [`docs/reference/registry-schema.md`](docs/reference/registry-schema.md)。
 
-## 校验与发布
+## 校验、收录与发布
 
 ```bash
 make check
@@ -104,19 +113,29 @@ gqy-plugin verify --artifacts              # 逐一下载产物，核对哈希�
 gqy-plugin package ./my-plugin --output dist/my-plugin-1.0.0.tar.gz
 ```
 
-打包器是确定性的：路径排序、固定时间戳与 uid/gid、权限归一。输出 JSON 包含真实 `sha256` 与 `size`，直接用于目录条目。
+打包器是确定性的：路径排序、固定时间戳与 uid/gid、权限归一。输出 JSON 包含真实 `sha256` 与 `size`。
 
-发布一个新版本：
+### 组织内：自动收录
 
-1. 在插件仓库完成自检并打 tag。
-2. 用 `gqy-plugin package` 生成 `.tar.gz`，把产物上传到本仓库的 GitHub Release。
-3. 在 `registry.json` 增加 `version` 条目，填真实 URL、SHA-256、大小、协议与动作。
-4. 更新 `updated_at`，提 PR；CI 会跑 strict 校验，合并后再跑产物下载校验。
-5. 下载产物并逐项验证：
+公开仓库按标准命名为 `gqy-plugins-<Name>-default`，根目录有合法 `manifest.json` 即可被发现：
 
 ```bash
-gqy-plugin verify --strict --artifacts
+# workflow 内部等价命令
+GITHUB_TOKEN=$(gh auth token) gqy-plugin sync-org --org GQYTeam --registry registry.json --json
 ```
+
+同步器会读取默认分支 HEAD，下载 commit SHA 固定的 tarball，计算真实 SHA-256 / size，解析 manifest 并写入目录。已有 Release 产物的同版本条目保持不动；同版本内容不同则报告冲突并要求 bump version。工作流通过 main ruleset 的 `github-actions[bot]` bypass 提交，并显式触发 CI 与 Pages。
+
+### 组织外：自动 PR
+
+外部在线 GitHub 仓库使用 [「插件收录申请」](https://github.com/GQYTeam/gqy-plugins/issues/new?template=plugin_submission.yml) 提交：
+
+1. 产物必须是同一来源仓库 `releases/download/` 下的 `.tar.gz` / `.tgz`，且版本已发布。
+2. issue 或 `workflow_dispatch` 触发 `external-plugin-pr.yml`。
+3. 机器人下载产物，校验 SHA-256、大小、manifest 与来源仓库，自动创建/更新 PR。
+4. PR 只改 `registry.json`，必须 CI 全绿并完成一次人工评审；workflow 没有合并步骤。
+
+外部仓库如果属于 `GQYTeam` 会被 `add-external` 拒绝，必须走组织内自动收录。
 
 ## 仓库结构
 
@@ -128,10 +147,11 @@ gqy-plugin verify --strict --artifacts
 ├── internal/manifest/         # 包内 manifest 校验
 ├── internal/archive/          # 确定性打包、安全解包
 ├── internal/install/          # 下载、SHA-256、原子安装
+├── internal/catalog/          # 组织同步、外部提交、产物校验、目录合并
 ├── internal/gqyapi/           # 可选 reload / load 通知
 ├── web/                       # 零构建静态目录站
 ├── docs/                      # designs / blueprint / construction / reference
-└── .github/                   # CI、Pages、Issue / PR 模板
+└── .github/                   # CI、Pages、组织同步、外部自动 PR、Issue / PR 模板
 ```
 
 ## 开发
@@ -140,14 +160,15 @@ gqy-plugin verify --strict --artifacts
 make check        # gofmt + vet + test + build + web 语法 + strict 目录校验
 make test
 make build        # dist/gqy-plugin
-make package      # 重新打包两个官方插件（默认读取相邻插件仓库）
+make package      # 重新打包两个带 Release 的官方插件（默认读取相邻插件仓库）
 SHOW_DIR=/path/to/show EMOTE_DIR=/path/to/emote make package
+make sync-org     # 用 GITHUB_TOKEN 同步组织内插件
 make clean
 ```
 
 `make package` 默认从组织工作区中相邻的 `gqy-plugins-ShowImages-default/` 与 `gqy-plugins-EmotePack-default/` 读取源码；单独克隆本仓库时用 `SHOW_DIR` / `EMOTE_DIR` 覆盖。
 
-CI 在 Linux 上跑 Go 1.22 与 stable 矩阵，并额外下载 Release 产物做完整性验证。Pages 只发布 `web/` 与根 `registry.json`。
+CI 在 Linux 上跑 Go 1.22 与 stable 矩阵，并额外下载全部产物做完整性验证。Pages 只发布 `web/` 与根 `registry.json`。组织同步 workflow 每 6 小时运行一次，也可手动触发。
 
 ## 文档
 
@@ -155,8 +176,9 @@ CI 在 Linux 上跑 Go 1.22 与 stable 矩阵，并额外下载 Release 产物�
 - 目录蓝图：[`docs/blueprint/registry.md`](docs/blueprint/registry.md)
 - 安装器蓝图：[`docs/blueprint/installer.md`](docs/blueprint/installer.md)
 - 静态站蓝图：[`docs/blueprint/site.md`](docs/blueprint/site.md)
+- 自动收录与外部 PR：[`docs/blueprint/automation.md`](docs/blueprint/automation.md)
 - 协议参考：[`docs/reference/registry-schema.md`](docs/reference/registry-schema.md)
-- 施工留底：[`docs/construction/001-在线收录与安装仓库.md`](docs/construction/001-在线收录与安装仓库.md)
+- 施工留底：[`docs/construction/001-在线收录与安装仓库.md`](docs/construction/001-在线收录与安装仓库.md) · [002-组织内自动收录与外部自动 PR](docs/construction/002-组织内自动收录与外部自动PR.md)
 
 ## 许可与署名
 

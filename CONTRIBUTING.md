@@ -22,25 +22,40 @@ go run ./cmd/gqy-plugin verify --registry registry.json --strict
 go run ./cmd/gqy-plugin verify --registry registry.json --strict --artifacts
 ```
 
-## 收录新插件
+## 收录插件
 
-1. **先发布产物。** 在插件仓库自检并打 tag，用 `gqy-plugin package <plugin-dir> --output dist/<id>-<version>.tar.gz --json` 生成确定性 `.tar.gz`，拿到真实 `sha256` 与 `size`。
-2. **上传 Release。** 把产物作为本仓库 GitHub Release 的资产上传。目录里的 `url` 必须指向不可变 Release 资产，不能指向分支归档或会变的下载地址。
-3. **补目录。** 在 `registry.json` 的对应插件或新插件条目写入真实元数据；禁止占位 `url` / `sha256` / `size`。同步更新 `updated_at`。
-4. **跑校验。** `make check` 与 `verify --strict --artifacts` 都通过。
-5. **提 PR。** PR 里贴产物下载地址、SHA-256、验证命令输出，并确认插件来源与许可证。
+### 组织内插件：自动收录
 
-### 版本与撤回
+`GQYTeam` 下的公开插件仓库遵循：
 
-- 版本固定 `MAJOR.MINOR.PATCH`。
-- 同版本号不可覆盖发布；修 bug 必须发新版本。
-- 发现严重问题时把旧版本标 `"yanked": true`，保留历史记录，不再参与 latest 选择。
-- `id` 全局唯一，改名视为新插件。
+- 仓库名 `gqy-plugins-<Name>-default`；
+- 根目录有合法 `manifest.json`；
+- 默认分支 HEAD 可构建；插件版本变化必须修改 `manifest.json` 的 `version`；
+- 同 `id@version` 已收录后不再覆盖产物，修改内容请发新版本。
 
-### 一次性插件
+满足以上条件后，`sync-org-plugins.yml` 每 6 小时自动发现并提交 `registry.json`。维护者也可手动运行：
 
-目录支持 `mode: "oneshot"` 作为未来元数据。当前 `gqy-plugin install` 只安装常驻插件（`mode` 缺省或 `resident`）；一次性插件需要显式运行，不走安装命令。
+```bash
+GITHUB_TOKEN=$(gh auth token) go run ./cmd/gqy-plugin sync-org --org GQYTeam
+```
 
+组织内插件不通过外部 PR 通道。
+
+### 组织外插件：自动 PR
+
+组织外 GitHub 仓库必须通过 [「插件收录申请」](https://github.com/GQYTeam/gqy-plugins/issues/new?template=plugin_submission.yml) 提交，或由维护者手动触发 `External plugin PR` workflow。
+
+要求：
+
+1. 来源仓库必须是公开 GitHub 仓库，owner 不能是 `GQYTeam`。
+2. 产物必须是同一仓库 `releases/download/` 下的 `.tar.gz` / `.tgz`，版本已发布且不可变。
+3. 包根或唯一顶层目录必须有合法 `manifest.json`。
+4. issue 中填写的 SHA-256 与大小必须与真实产物一致。
+5. workflow 只创建/更新 PR，不自动合并；合入前必须 CI 全绿 + 一次人工评审。
+
+禁止同时用组织内和外部通道收录同一个插件；`gqy-plugin add-external` 会拒绝组织仓库。
+
+## 提交信息
 ## 提交信息
 
 - 主题行用祈使句、不超过 72 字符，例如 `feat: 收录表情包插件 1.0.0`。

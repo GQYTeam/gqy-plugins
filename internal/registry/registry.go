@@ -46,6 +46,8 @@ type Plugin struct {
 	Summary     string    `json:"summary"`
 	Description string    `json:"description,omitempty"`
 	Homepage    string    `json:"homepage,omitempty"`
+	SourceType  string    `json:"source_type,omitempty"`
+	Repository  string    `json:"repository,omitempty"`
 	Tags        []string  `json:"tags,omitempty"`
 	Versions    []Version `json:"versions"`
 }
@@ -176,6 +178,24 @@ func validatePlugin(p *Plugin, strict bool) error {
 		if u.Host == "" || (u.Scheme != "https" && u.Scheme != "http") {
 			return fmt.Errorf("registry: homepage 必须是 http(s) 绝对地址，得到 %q", p.Homepage)
 		}
+	}
+	if p.SourceType != "" && p.SourceType != "org" && p.SourceType != "external" {
+		return fmt.Errorf("registry: source_type 只能是 org / external: %q", p.SourceType)
+	}
+	if p.Repository != "" {
+		u, err := url.Parse(p.Repository)
+		if err != nil {
+			return fmt.Errorf("registry: repository 非法: %w", err)
+		}
+		if u.Host == "" || (u.Scheme != "https" && u.Scheme != "http") {
+			return fmt.Errorf("registry: repository 必须是 http(s) 绝对地址，得到 %q", p.Repository)
+		}
+		if strict && u.Scheme != "https" {
+			return fmt.Errorf("registry: strict 要求 repository 使用 https")
+		}
+	}
+	if p.SourceType != "" && p.Repository == "" {
+		return errors.New("registry: 设置了 source_type 时必须提供 repository")
 	}
 	if len(p.Versions) == 0 {
 		return errors.New("registry: versions 不能为空")

@@ -55,6 +55,11 @@ function cardHTML(plugin) {
     ? version.actions.map((name) => `<code>${escapeHTML(name)}</code>`).join(' · ')
     : '未声明动作';
   const command = version ? installCommand(plugin, version.version) : '目录暂无可用版本';
+  const source = plugin.source_type === 'org'
+    ? '<span class="source org">组织内自动收录</span>'
+    : plugin.source_type === 'external'
+      ? '<span class="source external">外部 PR 收录</span>'
+      : '';
   return `
     <article class="card">
       <div class="card-head">
@@ -68,7 +73,7 @@ function cardHTML(plugin) {
         <code title="${escapeHTML(command)}">${escapeHTML(command)}</code>
         <button class="copy" type="button" data-command="${escapeHTML(command)}">复制</button>
       </div>
-      <div class="meta">${escapeHTML(plugin.id)} · ${escapeHTML(version ? version.protocol || '' : '')} · ${formatSize(version ? version.size : 0)}</div>
+      <div class="meta">${source}<span>${escapeHTML(plugin.id)} · ${escapeHTML(version ? version.protocol || '' : '')} · ${formatSize(version ? version.size : 0)}</span></div>
     </article>`;
 }
 

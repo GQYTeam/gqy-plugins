@@ -22,6 +22,8 @@
   "description": "可选长描述",
   "homepage": "https://example.com",
   "tags": ["图片", "示例"],
+  "source_type": "org",
+  "repository": "https://github.com/GQYTeam/gqy-plugins-ShowImages-default",
   "versions": [Version]
 }
 ```
@@ -32,6 +34,8 @@
 - `name`、`summary`：非空。
 - `homepage`：可选；`http(s)` 绝对地址；strict 模式要求 HTTPS。
 - `versions`：至少一项，版本号不重复。
+- `source_type`：可选 `org` / `external`；出现时必须带 `repository`。
+- `repository`：来源 GitHub 仓库 HTTPS 地址；strict 模式要求 HTTPS。
 
 ## Version
 
@@ -69,3 +73,9 @@
 1. `id` 精确匹配插件。
 2. 指定 `version` 时精确匹配，`yanked` 拒绝。
 3. 未指定 `version` 时，在非 yanked 版本中按 MAJOR、MINOR、PATCH 数值取最大。
+
+## 来源策略
+
+- `org`：组织内公开 `gqy-plugins-*` 仓库由同步 workflow 直接收录；无 Release 时使用 commit-pinned tarball。
+- `external`：组织外 GitHub 仓库必须由 issue / dispatch 触发自动 PR；产物必须来自同一仓库 `releases/download/`。
+- 同 id 同 version 的已有产物不可替换；要更新必须发布新版本。

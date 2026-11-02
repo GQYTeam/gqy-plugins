@@ -1,0 +1,164 @@
+name: External plugin PR
+
+on:
+  issues:
+    types: [opened, edited, labeled]
+  workflow_dispatch:
+    inputs:
+      repository:
+        description: "外部插件来源仓库，如 https://github.com/acme/gqy-plugin-demo"
+        required: true
+        type: string
+      artifact_url:
+        description: "同一仓库的 GitHub Release .tar.gz 资产 URL"
+        required: true
+        type: string
+
+permissions:
+  contents: write
+  issues: write
+  pull-requests: write
+  actions: write
+
+concurrency:
+  group: external-plugin-${{ github.event.issue.number || github.run_id }}
+  cancel-in-progress: true
+
+jobs:
+  auto-pr:
+    name: Validate external plugin and open PR
+    if: |
+      github.event_name == 'workflow_dispatch' ||
+      contains(github.event.issue.title, '[Plugin]') ||
+      contains(github.event.issue.labels.*.name, 'plugin-submission')
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout main
+        uses: actions/checkout@v4
+        with:
+          ref: main
+          fetch-depth: 0
+
+      - name: Set up Go
+        uses: actions/setup-go@v5
+        with:
+          go-version: stable
+
+      - name: Build catalog entry from submission
+        id: entry
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          EVENT_NAME: ${{ github.event_name }}
+          ISSUE_NUMBER: ${{ github.event.issue.number }}
+          ISSUE_BODY: ${{ github.event.issue.body }}
+          INPUT_REPOSITORY: ${{ github.event.inputs.repository }}
+          INPUT_ARTIFACT_URL: ${{ github.event.inputs.artifact_url }}
+        run: |
+          set -euo pipefail
+          if [ "$EVENT_NAME" = "issues" ]; then
+            printf '%s' "$ISSUE_BODY" > /tmp/issue-body.md
+            if go run ./cmd/gqy-plugin add-external \
+              --issue-body /tmp/issue-body.md \
+              --registry registry.json \
+              --json > /tmp/external-add.json; then
+              :
+            else
+              if [ -n "$ISSUE_NUMBER" ]; then
+                gh issue comment "$ISSUE_NUMBER" --repo "$GITHUB_REPOSITORY" \
+                  --body "自动生成 PR 失败：提交里的仓库、Release 产物或 manifest 未通过校验。请修正 issue 后会重新触发；详细原因见 Actions 日志。"
+              fi
+              exit 1
+            fi
+          else
+            if go run ./cmd/gqy-plugin add-external \
+              --repository "$INPUT_REPOSITORY" \
+              --artifact-url "$INPUT_ARTIFACT_URL" \
+              --registry registry.json \
+              --json > /tmp/external-add.json; then
+              :
+            else
+              exit 1
+            fi
+          fi
+          cat /tmp/external-add.json
+          CHANGED=$(jq -r '.changed' /tmp/external-add.json)
+          echo "changed=$CHANGED" >> "$GITHUB_OUTPUT"
+          {
+            echo '## 外部插件自动 PR'
+            echo
+            echo '```json'
+            cat /tmp/external-add.json
+            echo '```'
+          } >> "$GITHUB_STEP_SUMMARY"
+          if [ "$CHANGED" = "false" ] && [ -n "$ISSUE_NUMBER" ]; then
+            gh issue comment "$ISSUE_NUMBER" --repo "$GITHUB_REPOSITORY" \
+              --body "目录已包含该插件版本且产物一致，无需变更。"
+          fi
+
+      - name: Commit, push and open PR
+        if: steps.entry.outputs.changed == 'true'
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          EVENT_NAME: ${{ github.event_name }}
+          ISSUE_NUMBER: ${{ github.event.issue.number }}
+        run: |
+          set -euo pipefail
+          ID=$(jq -r '.id' /tmp/external-add.json)
+          VERSION=$(jq -r '.version' /tmp/external-add.json)
+          REPOSITORY=$(jq -r '.repository' /tmp/external-add.json)
+          ARTIFACT_URL=$(jq -r '.artifact_url' /tmp/external-add.json)
+          SHA256=$(jq -r '.sha256' /tmp/external-add.json)
+          SIZE=$(jq -r '.size' /tmp/external-add.json)
+
+          if [ "$EVENT_NAME" = "issues" ]; then
+            BRANCH="auto/external-plugin-${ISSUE_NUMBER}"
+          else
+            BRANCH="auto/external-plugin-run-${GITHUB_RUN_ID}"
+          fi
+
+          git config user.name 'github-actions[bot]'
+          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+          git switch -c "$BRANCH"
+          git add registry.json
+          git commit -m "feat: 收录外部插件 ${ID}@${VERSION}"
+          git push --force origin "HEAD:refs/heads/${BRANCH}"
+
+          {
+            echo '## 外部插件自动 PR'
+            echo
+            echo "- 插件：\`${ID}@${VERSION}\`"
+            echo "- 来源：${REPOSITORY}"
+            echo "- 产物：${ARTIFACT_URL}"
+            echo "- SHA-256：\`${SHA256}\`"
+            echo "- 大小：${SIZE} bytes"
+            echo
+            echo "该 PR 由 issue 自动生成，只修改 registry.json。合入前必须通过 CI 并完成一次人工评审。"
+            echo '外部插件不会直接写入 main。'
+            if [ -n "$ISSUE_NUMBER" ]; then
+              echo
+              echo "Closes #${ISSUE_NUMBER}"
+            fi
+          } > /tmp/pr-body.md
+
+          gh label create plugin-submission --repo "$GITHUB_REPOSITORY" \
+            --color FBCA04 --description '外部插件自动 PR' --force
+          PR_NUMBER=$(gh pr list --repo "$GITHUB_REPOSITORY" --head "$BRANCH" \
+            --base main --state open --json number --jq '.[0].number // empty')
+          if [ -z "$PR_NUMBER" ]; then
+            PR_URL=$(gh pr create --repo "$GITHUB_REPOSITORY" --base main --head "$BRANCH" \
+              --title "feat: 收录外部插件 ${ID}@${VERSION}" \
+              --body-file /tmp/pr-body.md --label plugin-submission)
+          else
+            gh pr edit "$PR_NUMBER" --repo "$GITHUB_REPOSITORY" \
+              --title "feat: 收录外部插件 ${ID}@${VERSION}" \
+              --body-file /tmp/pr-body.md --add-label plugin-submission
+            PR_URL=$(gh pr view "$PR_NUMBER" --repo "$GITHUB_REPOSITORY" --json url --jq '.url')
+          fi
+
+          gh workflow run ci.yml --repo "$GITHUB_REPOSITORY" --ref "$BRANCH"
+          if [ -n "$ISSUE_NUMBER" ]; then
+            gh issue comment "$ISSUE_NUMBER" --repo "$GITHUB_REPOSITORY" \
+              --body "已自动生成 PR：${PR_URL}
+          
+          外部插件只走 PR，不会直接写入 main；合入前需要 CI 全绿和一次人工评审。"
+          fi

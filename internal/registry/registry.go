@@ -311,7 +311,8 @@ func readHTTP(ctx context.Context, source string) ([]byte, string, error) {
 	if err != nil {
 		return nil, "", fmt.Errorf("registry: 构造请求失败: %w", err)
 	}
-	resp, err := http.DefaultClient.Do(req)
+	client := &http.Client{Timeout: 20 * time.Second}
+	resp, err := client.Do(req)
 	if err != nil {
 		return nil, "", fmt.Errorf("registry: 拉取 %s 失败: %w", source, err)
 	}
@@ -325,7 +326,7 @@ func readHTTP(ctx context.Context, source string) ([]byte, string, error) {
 	if err != nil {
 		return nil, "", err
 	}
-	return data, dirURL(source), nil
+	return data, dirURL(resp.Request.URL.String()), nil
 }
 
 // readFileURL 读取 file:// URL 指向的本地文件；base 为文件所在目录的 file URL。

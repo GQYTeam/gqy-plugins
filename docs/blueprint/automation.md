@@ -15,7 +15,7 @@
 | `internal/catalog/external.go` | 外部仓库 / Release URL 约束与来源类型校验 |
 | `internal/catalog/inspect.go` | 下载、SHA-256、解包、读取 manifest |
 | `internal/catalog/upsert.go` | 目录条目合并、同版本产物保护 |
-| `.github/workflows/sync-org-plugins.yml` | 每 6 小时 + 手动同步组织内插件，直接提交 main |
+| `.github/workflows/publish-catalog.yml` | 每 6 小时 + main 更新 + 手动触发：同步组织插件、写 `published` 分支并部署 Pages |
 | `.github/workflows/external-plugin-pr.yml` | issue / 手动触发外部自动 PR |
 
 ## 3. 组织内自动收录
@@ -32,10 +32,10 @@
 3. 下载并解包；校验 manifest；计算真实 SHA-256 与 size。
 4. `source_type=org`，`repository=https://github.com/GQYTeam/<repo>`。
 5. 同版本已有且产物不同：保留旧条目并报告冲突，不覆盖。
-6. 有新版本或元数据变化：写 `registry.json`，strict 校验，提交通 `main`。
-7. 推送后显式 `workflow_dispatch` 触发 CI 与 Pages，弥补 `GITHUB_TOKEN` 提交不触发下游 workflow 的行为。
+6. 有新版本或元数据变化：写本地 `registry.json`，strict 校验。
+7. 把生成文件提交到 `published` 分支（只做 fast-forward push），并部署 Pages；CLI 默认读取 `published:registry.json`。
 
-组织内插件不需要 PR；写入权限由 `main` ruleset 的 `github-actions[bot]` bypass 提供。
+组织内插件不需要 PR，也不写受保护的 `main`。main 只保留可审计的基础目录与外部 PR 条目；发布文件由 workflow 从 main + 实时组织仓库生成。
 
 ## 4. 外部自动 PR
 
@@ -71,15 +71,22 @@
 - `repository`：来源仓库 HTTPS 地址。
 - 外部条目只能由 `add-external` 写入；组织内同步遇到来源类型冲突直接报错跳过。
 
-## 6. main 保护
+## 6. 分支保护
 
-仓库 ruleset `main protection`：
+`main protection` ruleset：
 
 - 禁止删除、禁止强推。
 - 要求一次 PR 评审，评审线程必须解决，过期评审在 push 后 dismiss。
 - 要求 `Check (Go 1.22.x)` 与 `Check (Go stable)` 通过。
-- bypass actors：RepositoryRole admin（应急）与 `github-actions[bot]`（仅组织同步）。
-- 外部 PR workflow 没有 merge / auto-merge 步骤。
+- bypass actors：仅 RepositoryRole admin（应急）。
+
+`published protection` ruleset：
+
+- 禁止删除、禁止强推。
+- 不要求 PR；允许 `publish-catalog.yml` 以正常 fast-forward 提交生成目录。
+- 目录文件只由工作流生成，不接收人工 PR。
+
+外部 PR workflow 没有 merge / auto-merge 步骤。
 
 ## 7. 手工命令
 
@@ -100,4 +107,5 @@ go run ./cmd/gqy-plugin add-external \
 - 无 Release 的组织插件使用 commit-pinned tarball。
 - 篡改产物、错哈希、错 size、错误来源、组织内仓库冒充外部均被拒绝。
 - 外部 issue 触发只生成/更新 PR，main 不出现直接提交。
-- 组织同步在规则保护下可通过 bot bypass 提交，并触发 CI 与 Pages。
+- `publish-catalog.yml` 能生成 `published:registry.json` 并部署 Pages；`published` 禁止强推和删除。
+- CLI 默认读取 `https://raw.githubusercontent.com/GQYTeam/gqy-plugins/published/registry.json`。

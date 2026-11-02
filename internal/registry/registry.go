@@ -1,6 +1,7 @@
 // Package registry 读取并校验 GQY 插件在线目录 registry.json。
 //
-// registry.json 是目录的唯一事实来源：静态站点和 gqy-plugin CLI 都读它。
+// main 上的 registry.json 是可审计基础目录；publish-catalog workflow 叠加组织内插件后
+// 生成 published:registry.json，静态站点和 gqy-plugin CLI 默认读取发布目录。
 // 包只做元数据校验，不下载插件文件；下载与安装（internal/install、gqy-plugin CLI）
 // 尚未实现，见 README 的路线图。
 package registry
@@ -22,7 +23,7 @@ import (
 
 const SchemaVersion = 1
 
-const DefaultURL = "https://raw.githubusercontent.com/GQYTeam/gqy-plugins/main/registry.json"
+const DefaultURL = "https://raw.githubusercontent.com/GQYTeam/gqy-plugins/published/registry.json"
 const maxBytes = 4 << 20
 
 var (

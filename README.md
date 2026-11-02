@@ -1,15 +1,16 @@
 # gqy-plugins
 
 [![CI](https://github.com/GQYTeam/gqy-plugins/actions/workflows/ci.yml/badge.svg)](https://github.com/GQYTeam/gqy-plugins/actions/workflows/ci.yml)
-[![Pages](https://github.com/GQYTeam/gqy-plugins/actions/workflows/pages.yml/badge.svg)](https://gqyteam.github.io/gqy-plugins/)
+[![Publish](https://github.com/GQYTeam/gqy-plugins/actions/workflows/publish-catalog.yml/badge.svg)](https://gqyteam.github.io/gqy-plugins/)
 
 GQY 插件在线目录与 `gqy-plugin` CLI。
 
 - **在线目录**：[gqyteam.github.io/gqy-plugins](https://gqyteam.github.io/gqy-plugins/)
-- **目录源文件**：[`registry.json`](registry.json)
+- **目录源文件**：[`registry.json`](registry.json)（main 可审计基目录）
+- **线上发布目录**：[`published:registry.json`](https://raw.githubusercontent.com/GQYTeam/gqy-plugins/published/registry.json)
 - **主程序**：[GQYTeam/GQY](https://github.com/GQYTeam/GQY)
 
-目录是唯一事实来源。静态站点和 CLI 都读同一份 `registry.json`，每个安装包都带不可变 URL、SHA-256 与大小。
+`main:registry.json` 是可审计的基础目录；`publish-catalog.yml` 叠加组织内实时插件后生成 `published:registry.json`，静态站与 CLI 默认读线上发布目录。每个安装包都带不可变 URL、SHA-256 与大小。
 
 收录分两条线：**组织内公开插件自动收录**；**组织外在线仓库一律自动生成 PR**，不会直接写入 main。
 
@@ -18,27 +19,20 @@ GQY 插件在线目录与 `gqy-plugin` CLI。
 需要 Go 1.22+ 和 GQY 运行环境；当前官方插件还需要 Node 18+。
 
 ```bash
-# 浏览
-go run github.com/GQYTeam/gqy-plugins/cmd/gqy-plugin@latest list
-go run github.com/GQYTeam/gqy-plugins/cmd/gqy-plugin@latest search 图片
-go run github.com/GQYTeam/gqy-plugins/cmd/gqy-plugin@latest info show-images-default
+# 1. 先安装 CLI
+go install github.com/GQYTeam/gqy-plugins/cmd/gqy-plugin@latest
 
-# 安装到 $GQY_HOME/plugins/<id>/
-go run github.com/GQYTeam/gqy-plugins/cmd/gqy-plugin@latest install show-images-default
+# 2. 浏览
+gqy-plugin list
+gqy-plugin search 图片
+gqy-plugin info show-images-default
 
-# 让本机 GQY 重扫；只有显式 --load 才启动插件
-go run github.com/GQYTeam/gqy-plugins/cmd/gqy-plugin@latest install show-images-default \
+# 3. 安装并自动通知 GQY 重新扫描、加载插件
+gqy-plugin install show-images-default \
   --server http://127.0.0.1:5173 --load
 ```
 
-也可以先安装 CLI：
-
-```bash
-go install github.com/GQYTeam/gqy-plugins/cmd/gqy-plugin@latest
-gqy-plugin install emote-pack-default
-```
-
-`GQY_HOME` 默认是 `~/.gqy`。安装后的下一步是 `POST /api/plugins/reload`，再 `POST /api/plugins/<id>/load`；CLI 的 `--server` 与 `--load` 只是帮你调用这两个接口。
+`GQY_HOME` 默认是 `~/.gqy`。`--server http://127.0.0.1:5173 --load` 会在安装成功后调用 `POST /api/plugins/reload` 与 `POST /api/plugins/<id>/load`，卡片上的安装命令默认包含这两步。
 
 ## 当前收录
 
@@ -47,10 +41,11 @@ gqy-plugin install emote-pack-default
 | `show-images-default` | 1.0.0 | `list` / `show` | [Release v0.1.0](https://github.com/GQYTeam/gqy-plugins/releases/tag/v0.1.0) |
 | `emote-pack-default` | 1.0.0 | `list` / `show` / `match` | [Release v0.1.0](https://github.com/GQYTeam/gqy-plugins/releases/tag/v0.1.0) |
 | `github-account-default` | 1.0.0 | `status` / `login` / `login-wait` / `logout` / `env` / `gh` / `git` | 组织源码归档（commit-pinned tarball） |
+| `migrator-default` | 1.0.0 | `run` | 一次性插件（ONESHOT，不常驻安装） |
 
 **收录规则：**
 
-- `GQYTeam/gqy-plugins-*` 公开插件仓库：`sync-org-plugins.yml` 每 6 小时扫描一次，自动校验并直接提交 `registry.json`。
+- `GQYTeam/gqy-plugins-*` 公开插件仓库：`publish-catalog.yml` 每 6 小时扫描一次，自动校验并生成 `published:registry.json`，同时部署 Pages。
 - 组织外 GitHub 仓库：通过「插件收录申请」issue 或手动 dispatch 触发 `external-plugin-pr.yml`，自动生成 PR；必须 CI 全绿 + 一次人工评审。
 - 已有同 `id@version` 的产物不可替换；想更新必须发布新版本。
 
@@ -124,7 +119,7 @@ gqy-plugin package ./my-plugin --output dist/my-plugin-1.0.0.tar.gz
 GITHUB_TOKEN=$(gh auth token) gqy-plugin sync-org --org GQYTeam --registry registry.json --json
 ```
 
-同步器会读取默认分支 HEAD，下载 commit SHA 固定的 tarball，计算真实 SHA-256 / size，解析 manifest 并写入目录。已有 Release 产物的同版本条目保持不动；同版本内容不同则报告冲突并要求 bump version。工作流通过 main ruleset 的 `github-actions[bot]` bypass 提交，并显式触发 CI 与 Pages。
+同步器会读取默认分支 HEAD，下载 commit SHA 固定的 tarball，计算真实 SHA-256 / size，解析 manifest 并写入目录。已有 Release 产物的同版本条目保持不动；同版本内容不同则报告冲突并要求 bump version。工作流不写受保护的 main，而是把生成结果 fast-forward 到 `published` 分支并部署 Pages。
 
 ### 组织外：自动 PR
 
@@ -141,7 +136,7 @@ GITHUB_TOKEN=$(gh auth token) gqy-plugin sync-org --org GQYTeam --registry regis
 
 ```text
 .
-├── registry.json              # 在线目录唯一事实来源
+├── registry.json              # main 可审计基目录（发布时叠加组织内插件）
 ├── cmd/gqy-plugin/            # CLI 子命令
 ├── internal/registry/         # 目录读取、校验、版本解析
 ├── internal/manifest/         # 包内 manifest 校验

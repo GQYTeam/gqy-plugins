@@ -1,0 +1,102 @@
+name: Publish catalog
+
+on:
+  push:
+    branches: [main]
+  schedule:
+    - cron: "17 */6 * * *"
+  workflow_dispatch:
+
+permissions:
+  contents: write
+  pages: write
+  id-token: write
+
+concurrency:
+  group: publish-catalog
+  cancel-in-progress: false
+
+jobs:
+  publish:
+    name: Sync org plugins and publish catalog
+    runs-on: ubuntu-latest
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+    steps:
+      - name: Checkout main
+        uses: actions/checkout@v4
+        with:
+          ref: main
+          fetch-depth: 0
+
+      - name: Set up Go
+        uses: actions/setup-go@v5
+        with:
+          go-version: stable
+
+      - name: Discover org plugins
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          go run ./cmd/gqy-plugin sync-org \
+            --org GQYTeam \
+            --registry registry.json \
+            --json | tee /tmp/sync-result.json
+          {
+            echo '## 组织插件同步'
+            echo
+            echo '```json'
+            cat /tmp/sync-result.json
+            echo '```'
+          } >> "$GITHUB_STEP_SUMMARY"
+
+      - name: Validate generated catalog
+        run: go run ./cmd/gqy-plugin verify --registry registry.json --strict
+
+      - name: Configure Pages
+        uses: actions/configure-pages@v5
+
+      - name: Assemble static site
+        run: |
+          mkdir -p _site
+          cp -R web/. _site/
+          cp registry.json _site/registry.json
+
+      - name: Upload Pages artifact
+        uses: actions/upload-pages-artifact@v3
+        with:
+          path: _site
+
+      - name: Publish generated registry branch
+        run: |
+          set -euo pipefail
+          git config user.name 'github-actions[bot]'
+          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+          cp registry.json "$RUNNER_TEMP/registry.generated.json"
+          git restore registry.json
+          PUBLISHED_EXISTS=1
+          if git ls-remote --exit-code --heads origin published >/dev/null 2>&1; then
+            git fetch origin published
+            git switch -C published FETCH_HEAD
+          else
+            PUBLISHED_EXISTS=0
+            git switch -c published
+          fi
+          cp "$RUNNER_TEMP/registry.generated.json" registry.json
+          git add registry.json
+          if git diff --cached --quiet; then
+            if [ "$PUBLISHED_EXISTS" = "0" ]; then
+              git commit --allow-empty -m 'chore: 初始化插件发布目录'
+              git push origin published
+            else
+              echo 'published 分支上的 registry.json 无变化。'
+            fi
+          else
+            git commit -m 'chore: 自动发布插件目录'
+            git push origin published
+          fi
+
+      - name: Deploy Pages
+        id: deployment
+        uses: actions/deploy-pages@v4

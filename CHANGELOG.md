@@ -9,16 +9,16 @@
 - 目录新增 `source_type`（`org` / `external`）与 `repository` 来源字段，站点展示“组织内自动收录 / 外部 PR 收录”。
 - `gqy-plugin sync-org`：扫描 `GQYTeam/gqy-plugins-*` 公开仓库，使用默认分支 HEAD 的 commit-pinned tarball，计算 SHA-256 / size 并自动写目录。
 - `gqy-plugin add-external`：解析插件收录 issue，校验同仓库 GitHub Release 产物，自动写入待 PR 的外部条目。
-- `.github/workflows/sync-org-plugins.yml`：每 6 小时自动收录组织内插件，直接提交 main，并显式触发 CI 与 Pages。
+- `.github/workflows/publish-catalog.yml`：main 更新 / 每 6 小时 / 手动触发；同步组织内插件，生成 `published:registry.json` 并部署 Pages。
 - `.github/workflows/external-plugin-pr.yml`：issue / dispatch 触发，自动创建或更新外部插件 PR，没有合并步骤。
 - `internal/catalog/`：GitHub 组织发现、HEAD tarball、产物下载解包、来源校验、同版本冲突保护与目录原子写入。
 - 目录新增 `github-account-default@1.0.0`，由组织内自动收录使用 commit-pinned tarball。
 
 ### Changed
 
-- 组织内收录不再需要 PR；组织外收录一律走自动 PR。
-- `main` 保护从经典 branch protection 迁移为 ruleset：保留一次评审与两个 Go check；管理员和 `github-actions[bot]` 可 bypass，仅供同步 workflow 使用。
-- README、设计、蓝图、协议参考、Issue 模板、CONTRIBUTING 与 Makefile 对齐新收录策略。
+- 组织内收录不再需要 PR，也不直接写 main；组织外收录一律走自动 PR。
+- `main` 保护从经典 branch protection 迁移为 ruleset：保留一次评审与两个 Go check；不扩大同步 bot 的 main bypass。新增 `published` 输出分支规则，禁止强推与删除。
+- CLI 默认目录切换为 `published:registry.json`；README、设计、蓝图、协议参考、Issue 模板、CONTRIBUTING 与 Makefile 对齐新收录策略。
 
 ### Fixed
 
@@ -37,7 +37,7 @@
 - `internal/gqyapi`：安装后通知 `/api/plugins/reload`，可选 `/api/plugins/{id}/load`。
 - `web/`：零构建插件目录站，支持搜索、版本、动作、大小与复制安装命令。
 - `docs/`：designs / blueprint / construction / reference 四层文档，记录 REG1–REG10 决策与验收。
-- `.github/workflows/pages.yml`：GitHub Pages 发布工作流。
+- `.github/workflows/publish-catalog.yml`：GitHub Pages 发布工作流（后续版本由 pages.yml 迁移）。
 - CI 增加 `go test -race`、Web JS 语法检查、strict 目录校验与 Release 产物逐项下载校验。
 
 ### Changed

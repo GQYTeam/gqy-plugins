@@ -3,36 +3,54 @@
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
-  <meta name="description" content="GQY 插件在线目录：浏览、搜索并用一条命令安装插件。">
-  <title>GQY Plugins · 插件目录</title>
+  <meta name="description" content="GQY 插件目录：用一条命令安装 CLI、安装插件并自动加载。">
+  <meta name="color-scheme" content="dark">
+  <title>GQY Plugins · Agent Plugin Directory</title>
   <link rel="stylesheet" href="./styles.css">
 </head>
 <body>
-  <header class="hero">
+  <header class="masthead">
     <nav class="nav" aria-label="主导航">
-      <a class="brand" href="./">GQY <span>Plugins</span></a>
+      <a class="brand" href="./" aria-label="GQY Plugins 首页">
+        <span class="brand-mark" aria-hidden="true"></span>
+        <span>GQY</span><span class="slash">/</span><span class="brand-word">Plugins</span>
+      </a>
       <div class="nav-links">
         <a href="https://github.com/GQYTeam/gqy-plugins">GitHub</a>
-        <a href="https://github.com/GQYTeam/GQY">主仓库</a>
+        <a href="https://github.com/GQYTeam/GQY">GQY</a>
         <a href="./registry.json">registry.json</a>
       </div>
     </nav>
-    <div class="hero-copy">
-      <p class="eyebrow">OFFICIAL PLUGIN CATALOG</p>
-      <h1>给 GQY 装上新的能力。</h1>
-      <p class="lede">在线目录是唯一事实来源。每个安装包都带 SHA-256，安装时先校验、再解包、最后原子落盘。</p>
-      <div class="quickstart">
-        <code>go run github.com/GQYTeam/gqy-plugins/cmd/gqy-plugin@latest install &lt;id&gt;</code>
-        <button type="button" data-copy="go run github.com/GQYTeam/gqy-plugins/cmd/gqy-plugin@latest install " aria-label="复制安装命令">复制</button>
+
+    <div class="hero">
+      <div class="hero-lockup">
+        <h1>GQY<br>PLUGINS</h1>
+        <p class="hero-sub">THE OPEN AGENT<br>PLUGIN ECOSYSTEM</p>
+      </div>
+      <div class="hero-copy">
+        <p class="hero-lede">可复用的本地能力。一条命令先安装 CLI，再安装插件、通知 GQY 重新扫描并自动加载。</p>
+        <div class="terminal" aria-label="快速安装">
+          <div class="terminal-head"><span><i></i><i></i><i></i></span><span>TRY IT NOW</span></div>
+          <pre id="hero-command"><span class="prompt">$</span> go install github.com/GQYTeam/gqy-plugins/cmd/gqy-plugin@latest
+<span class="prompt">$</span> gqy-plugin install &lt;id&gt; --server http://127.0.0.1:5173 --load</pre>
+          <button type="button" class="terminal-copy" data-hero-copy aria-label="复制 CLI 安装命令">复制</button>
+        </div>
+        <p class="terminal-note">命令会先安装 CLI，再用 CLI 安装插件；安装完成后自动触发 reload 与 load。</p>
       </div>
     </div>
   </header>
 
-  <main>
-    <section class="toolbar" aria-label="目录筛选">
+  <main class="main">
+    <section class="catalog-head" aria-label="目录筛选">
+      <div>
+        <p class="section-kicker">PLUGIN DIRECTORY</p>
+        <h2>浏览插件</h2>
+      </div>
       <label class="search">
-        <span>搜索</span>
-        <input id="search" type="search" placeholder="名称、标签、动作……" autocomplete="off">
+        <span class="sr-only">搜索插件</span>
+        <svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="11" cy="11" r="7"></circle><path d="m20 20-4-4"></path></svg>
+        <input id="search" type="search" placeholder="搜索名称、标签、动作…" autocomplete="off">
+        <kbd>/</kbd>
       </label>
       <p id="count" class="count" aria-live="polite">正在读取目录…</p>
     </section>
@@ -40,20 +58,24 @@
     <section id="grid" class="grid" aria-label="插件列表"></section>
     <p id="message" class="message" role="status"></p>
 
-    <section class="how">
-      <h2>安装之后</h2>
+    <section class="how" aria-labelledby="how-title">
+      <div>
+        <p class="section-kicker">HOW IT WORKS</p>
+        <h2 id="how-title">卡片安装 = CLI 安装 + 自动加载</h2>
+      </div>
       <ol>
-        <li>把插件放进 <code>$GQY_HOME/plugins/&lt;id&gt;/</code>。</li>
-        <li>让运行中的 GQY 重扫：<code>POST /api/plugins/reload</code>。</li>
-        <li>显式加载插件：<code>POST /api/plugins/&lt;id&gt;/load</code>。安装不等于自动执行。</li>
+        <li><strong>先安装 CLI。</strong>卡片命令第一步永远是 <code>go install .../gqy-plugin@latest</code>。</li>
+        <li><strong>再安装插件。</strong>CLI 下载 Release / commit tarball，校验 SHA-256 后原子写入 <code>$GQY_HOME/plugins/&lt;id&gt;/</code>。</li>
+        <li><strong>自动加载。</strong><code>--server http://127.0.0.1:5173 --load</code> 会调用 <code>/api/plugins/reload</code> 与 <code>/api/plugins/&lt;id&gt;/load</code>。</li>
       </ol>
-      <p>也可以加 <code>--server http://127.0.0.1:5173</code> 让 CLI 自动通知本机 GQY；加 <code>--load</code> 才会请求加载。</p>
+      <p class="how-note">卡片按钮只复制命令，不会在浏览器里执行本地程序。一次性插件（oneshot）不常驻安装，会在卡片上单独标记。</p>
     </section>
   </main>
 
-  <footer>
-    <p>GQYTeam · <span id="updated"></span></p>
-    <p>安装插件 = 信任它，请只装你信任的来源。详见 <a href="https://github.com/GQYTeam/gqy-plugins/blob/main/SECURITY.md">安全说明</a>。</p>
+  <footer class="footer">
+    <p>GQYTeam · <span id="updated">目录读取中…</span></p>
+    <p>安装插件 = 信任它。SHA-256 保证传输完整，不提供代码签名或沙箱。</p>
+    <p><a href="https://github.com/GQYTeam/gqy-plugins/blob/main/SECURITY.md">安全说明</a></p>
   </footer>
 
   <script src="./app.js" defer></script>

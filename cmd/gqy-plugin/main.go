@@ -73,6 +73,10 @@ func printHelp() {
   GQY_AUTH_TOKEN       GQY 管理接口令牌（也可用 --token）
   GITHUB_TOKEN         组织插件自动收录用的 GitHub API token
 
-安装只把文件原子放到 $GQY_HOME/plugins/<id>/；默认不自动加载。
+示例:
+  go install github.com/GQYTeam/gqy-plugins/cmd/gqy-plugin@latest
+  gqy-plugin install show-images-default --server http://127.0.0.1:5173 --load
+
+安装只把文件原子放到 $GQY_HOME/plugins/<id>/；不加 --load 时默认不自动加载。
 `)
 }

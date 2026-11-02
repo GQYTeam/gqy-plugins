@@ -8,12 +8,12 @@
 
 | 位置 | 职责 |
 | --- | --- |
-| `registry.json` | 生产目录，唯一事实来源 |
+| `registry.json` | main 上的可审计基础目录；发布时叠加组织内实时插件 |
 | `internal/registry/registry.go` | 读取（HTTPS / `file://` / 本地路径）、JSON 解析、字段校验、相对 URL 解析 |
 | `internal/registry/resolve.go` | `Find`、版本选择、三位版本比较 |
 | `internal/registry/registry_test.go` | 生产目录真实校验与拒绝路径 |
 | `internal/registry/resolve_test.go` | 最新版、yanked、版本比较 |
-| `web/app.js` | 浏览器读取同一份 `registry.json` |
+| `published:registry.json` | `publish-catalog.yml` 生成的线上目录，CLI / 浏览器默认读取 |
 
 ## 3. 顶层结构
 
@@ -77,7 +77,7 @@
 - 本地路径 / `file://`：相对 `url` 按目录文件所在目录解析。
 - 绝对 http(s) URL：原样使用。
 
-生产 `registry.json` 必须全部是 `https://github.com/GQYTeam/gqy-plugins/releases/...` 形式，CI 以 strict 模式检查。
+发布目录中的版本 URL 必须是 HTTPS 绝对地址：外部条目来自 `https://github.com/<owner>/<repo>/releases/download/...`，组织内无 Release 时来自 `https://api.github.com/repos/GQYTeam/<repo>/tarball/<sha>`。CI 对 main 目录执行 strict 校验。
 
 ## 7. 校验时机
 
@@ -91,16 +91,17 @@
 
 ## 8. 来源分层
 
-- `source_type=org`：由 `gqy-plugin sync-org` 扫描 `GQYTeam/gqy-plugins-*` 公开仓库生成，直接写入 main。
+- `source_type=org`：由 `gqy-plugin sync-org` 扫描 `GQYTeam/gqy-plugins-*` 公开仓库生成，随后由 `publish-catalog.yml` 写到 `published` 分支。
 - `source_type=external`：由 `external-plugin-pr.yml` 验证外部 GitHub Release 后生成 PR，人工评审合入。
 - 发现同 id 同版本但 URL / SHA-256 不同：保留旧产物并报告冲突，必须发布新版本。
 
 ## 9. 当前官方条目
 
-`registry.json` 自动收录三个组织内插件：
+`registry.json` 当前快照包含四个组织内插件：
 
 - `emote-pack-default@1.0.0`
 - `github-account-default@1.0.0`（commit-pinned tarball）
+- `migrator-default@1.0.0`（commit-pinned tarball，`mode: oneshot`）
 - `show-images-default@1.0.0`
 
 前两个仓库的已有 Release 产物保持不变；没有 Release 的组织插件使用 commit-pinned tarball。新增条目禁止占位值。

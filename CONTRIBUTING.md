@@ -33,7 +33,7 @@ go run ./cmd/gqy-plugin verify --registry registry.json --strict --artifacts
 - 默认分支 HEAD 可构建；插件版本变化必须修改 `manifest.json` 的 `version`；
 - 同 `id@version` 已收录后不再覆盖产物，修改内容请发新版本。
 
-满足以上条件后，`sync-org-plugins.yml` 每 6 小时自动发现并提交 `registry.json`。维护者也可手动运行：
+满足以上条件后，`publish-catalog.yml` 每 6 小时自动发现并生成 `published:registry.json` 与 Pages 站点。维护者也可手动运行：
 
 ```bash
 GITHUB_TOKEN=$(gh auth token) go run ./cmd/gqy-plugin sync-org --org GQYTeam

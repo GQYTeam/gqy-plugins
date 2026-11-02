@@ -1,6 +1,6 @@
 {
   "schema_version": 1,
-  "updated_at": "2026-11-02T14:00:02Z",
+  "updated_at": "2026-11-02T14:14:18Z",
   "plugins": [
     {
       "id": "emote-pack-default",
@@ -42,7 +42,9 @@
       "homepage": "https://github.com/GQYTeam/gqy-plugins-GitHubAccount-default",
       "source_type": "org",
       "repository": "https://github.com/GQYTeam/gqy-plugins-GitHubAccount-default",
-      "tags": [],
+      "tags": [
+        "组织内"
+      ],
       "versions": [
         {
           "version": "1.0.0",
@@ -62,6 +64,33 @@
           "url": "https://api.github.com/repos/GQYTeam/gqy-plugins-GitHubAccount-default/tarball/acf5db5e942a744dd7a0f0e94303c705d21a840a",
           "sha256": "fdf906351a4af5119ae46fe3834c5d8d2c7dd10e4cf33d6f02d5ebb7f4fe2473",
           "size": 88369
+        }
+      ]
+    },
+    {
+      "id": "migrator-default",
+      "name": "迁移器（旧版 GQY_HOME → 新版）",
+      "summary": "把旧版 GQY v0.7.0 的 GQY_HOME 导出迁到新数据根：人格、记忆、知识库、提示词、表情包、技能、身份与配置；默认 dry-run、幂等、脱敏",
+      "description": "把旧版 GQY v0.7.0 的 GQY_HOME 导出迁到新数据根：人格、记忆、知识库、提示词、表情包、技能、身份与配置；默认 dry-run、幂等、脱敏",
+      "homepage": "https://github.com/GQYTeam/gqy-plugins-Migrator-default",
+      "source_type": "org",
+      "repository": "https://github.com/GQYTeam/gqy-plugins-Migrator-default",
+      "tags": [
+        "组织内"
+      ],
+      "versions": [
+        {
+          "version": "1.0.0",
+          "channel": "stable",
+          "published_at": "2026-11-02T14:14:18Z",
+          "mode": "oneshot",
+          "protocol": "gqy-jsonrpc-v1",
+          "actions": [
+            "run"
+          ],
+          "url": "https://api.github.com/repos/GQYTeam/gqy-plugins-Migrator-default/tarball/260aa3ad37b40099aebb0912bb324664773927d7",
+          "sha256": "ab3deadd3e29975db730a9ef2e2ac9b47dec9c7a0ac20d859acd5c85e88eda95",
+          "size": 62993
         }
       ]
     },

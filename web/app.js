@@ -27,7 +27,7 @@ function compareVersion(a, b) {
 }
 
 function latestVersion(plugin) {
-  const versions = (plugin.versions || []).filter((v) => v.yanked === false);
+  const versions = (plugin.versions || []).filter((v) => v.yanked !== true);
   versions.sort((a, b) => compareVersion(b.version, a.version));
   return versions[0] || null;
 }

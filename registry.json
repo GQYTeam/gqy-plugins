@@ -1,6 +1,6 @@
 {
   "schema_version": 1,
-  "updated_at": "2026-11-02T14:14:18Z",
+  "updated_at": "2026-11-02T14:27:46Z",
   "plugins": [
     {
       "id": "emote-pack-default",
@@ -31,6 +31,33 @@
           "url": "https://github.com/GQYTeam/gqy-plugins/releases/download/v0.1.0/emote-pack-default-1.0.0.tar.gz",
           "sha256": "f66f08d97c337e6e077570b06fe39f755e1587eb99d04b1f6d60930707a3993c",
           "size": 14355403
+        }
+      ]
+    },
+    {
+      "id": "external-demo",
+      "name": "外部插件示例",
+      "summary": "用于验证外部仓库自动 PR 链路的示例插件。",
+      "description": "用于验证外部仓库自动 PR 链路的示例插件。",
+      "homepage": "https://github.com/yxxbc/gqy-plugin-external-test",
+      "source_type": "external",
+      "repository": "https://github.com/yxxbc/gqy-plugin-external-test",
+      "tags": [
+        "外部收录"
+      ],
+      "versions": [
+        {
+          "version": "1.0.0",
+          "channel": "stable",
+          "published_at": "2026-11-02T14:27:46Z",
+          "mode": "resident",
+          "protocol": "gqy-jsonrpc-v1",
+          "actions": [
+            "ping"
+          ],
+          "url": "https://github.com/yxxbc/gqy-plugin-external-test/releases/download/v1.0.0/external-demo-1.0.0.tar.gz",
+          "sha256": "bd2752dc9da4a135be4e5f5dec7c0843a4ab0dbe5f92a4ec35e552f90ddcf5a8",
+          "size": 838
         }
       ]
     },

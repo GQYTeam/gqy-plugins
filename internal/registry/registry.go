@@ -29,6 +29,8 @@ var (
 	idRe      = regexp.MustCompile(`^[a-z0-9][a-z0-9_-]{0,31}$`)
 	versionRe = regexp.MustCompile(`^\d{1,4}\.\d{1,4}\.\d{1,4}$`)
 	sha256Re  = regexp.MustCompile(`^[a-f0-9]{64}$`)
+	actionRe  = regexp.MustCompile(`^[a-zA-Z][a-zA-Z0-9_-]{0,63}$`)
+	serviceRe = regexp.MustCompile(`^[a-z][a-z0-9_.-]{0,63}$`)
 )
 
 type Document struct {
@@ -207,6 +209,34 @@ func validateVersion(v *Version, strict bool) error {
 	}
 	if v.Size < 0 {
 		return fmt.Errorf("registry: size 不能为负数: %d", v.Size)
+	}
+	if v.Mode != "" && v.Mode != "resident" && v.Mode != "oneshot" {
+		return fmt.Errorf("registry: mode 只能是 resident / oneshot: %q", v.Mode)
+	}
+	if v.Protocol != "" {
+		switch v.Protocol {
+		case "gqy-jsonrpc-v1", "mcp", "unix", "tcp":
+		default:
+			return fmt.Errorf("registry: protocol 非法: %q", v.Protocol)
+		}
+	}
+	for _, action := range v.Actions {
+		if actionRe.MatchString(action) == false {
+			return fmt.Errorf("registry: action 名非法: %q", action)
+		}
+	}
+	for _, list := range []struct {
+		name string
+		vals []string
+	}{
+		{name: "provides", vals: v.Provides},
+		{name: "requires", vals: v.Requires},
+	} {
+		for _, val := range list.vals {
+			if serviceRe.MatchString(val) == false {
+				return fmt.Errorf("registry: %s 项非法: %q", list.name, val)
+			}
+		}
 	}
 	if err := validateArtifactURL(v.URL, strict); err != nil {
 		return err

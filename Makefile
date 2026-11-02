@@ -3,17 +3,22 @@
 # `make check` 是唯一验收入口，CI 用同口径的分步命令。
 
 GO ?= go
+BINARY ?= dist/gqy-plugin
+SHOW_DIR ?= ../gqy-plugins-ShowImages-default
+EMOTE_DIR ?= ../gqy-plugins-EmotePack-default
 
-.PHONY: help check fmt vet test build tidy clean
+.PHONY: help check fmt vet test build package verify web-check tidy clean
 
 help: ## 列出可用目标
-	@grep -hE '^[a-zA-Z_-]+:.*?## ' $(MAKEFILE_LIST) | awk 'BEGIN {FS = ":.*?## "}; {printf "  %-8s %s\n", $$1, $$2}'
+	@grep -hE '^[a-zA-Z_-]+:.*?## ' $(MAKEFILE_LIST) | awk 'BEGIN {FS = ":.*?## "}; {printf "  %-10s %s\n", $$1, $$2}'
 
-check: ## 验收：gofmt + vet + test + build（CI 同口径）
+check: ## 验收：gofmt + vet + test + build + web 语法 + 目录 strict 校验
 	@test -z "$$(gofmt -l .)" || { echo "以下文件未 gofmt，请跑 make fmt："; gofmt -l .; exit 1; }
 	$(GO) vet ./...
 	$(GO) test ./...
 	$(GO) build ./...
+	$(MAKE) web-check
+	$(MAKE) verify
 
 fmt: ## 格式化全部 Go 代码
 	gofmt -w .
@@ -24,8 +29,19 @@ vet: ## 静态检查
 test: ## 跑单元测试
 	$(GO) test ./...
 
-build: ## 编译全部包
-	$(GO) build ./...
+build: ## 构建 gqy-plugin 到 dist/
+	@mkdir -p dist
+	$(GO) build -trimpath -o $(BINARY) ./cmd/gqy-plugin
+
+package: build ## 打包当前两个官方插件到 dist/
+	$(BINARY) package $(SHOW_DIR) --output dist/show-images-default-1.0.0.tar.gz
+	$(BINARY) package $(EMOTE_DIR) --output dist/emote-pack-default-1.0.0.tar.gz
+
+verify: ## 用 strict 口径校验 registry.json（不下载产物）
+	$(GO) run ./cmd/gqy-plugin verify --registry registry.json --strict
+
+web-check: ## 零构建站点脚本语法检查
+	node --check web/app.js
 
 tidy: ## 整理 go.mod / go.sum
 	$(GO) mod tidy

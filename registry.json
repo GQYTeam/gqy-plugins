@@ -1,5 +1,52 @@
 {
   "schema_version": 1,
-  "updated_at": "2026-11-02T21:05:35+08:00",
-  "plugins": []
+  "updated_at": "2026-11-02T21:25:00+08:00",
+  "plugins": [
+    {
+      "id": "show-images-default",
+      "name": "图片展示示例",
+      "summary": "预置 13 张风格化示例图，提供 list / show 动作，供对话与产物灯箱展示。",
+      "description": "GQY 官方图片展示插件。零依赖 Node 运行时，stdio 换行 JSON-RPC；show 支持 inline=true 返回 data URI。",
+      "homepage": "https://github.com/GQYTeam/gqy-plugins-ShowImages-default",
+      "tags": ["图片", "示例", "产物", "展示"],
+      "versions": [
+        {
+          "version": "1.0.0",
+          "channel": "stable",
+          "published_at": "2026-11-02T21:25:00+08:00",
+          "mode": "resident",
+          "protocol": "gqy-jsonrpc-v1",
+          "actions": ["list", "show"],
+          "provides": [],
+          "requires": [],
+          "url": "https://github.com/GQYTeam/gqy-plugins/releases/download/v0.1.0/show-images-default-1.0.0.tar.gz",
+          "sha256": "cc5b425a3e22cff38a37d5513ec516a916b4156bd30c88ee729ff33dcbf5e156",
+          "size": 31375314
+        }
+      ]
+    },
+    {
+      "id": "emote-pack-default",
+      "name": "表情包插件",
+      "summary": "预置 24 张表情与 4 个动图，提供 list / show / match 动作。",
+      "description": "GQY 官方表情包插件。零依赖 Node 运行时；match 按标签确定性打分，show 支持内联 data URI。",
+      "homepage": "https://github.com/GQYTeam/gqy-plugins-EmotePack-default",
+      "tags": ["表情包", "图片", "匹配", "对话"],
+      "versions": [
+        {
+          "version": "1.0.0",
+          "channel": "stable",
+          "published_at": "2026-11-02T21:25:00+08:00",
+          "mode": "resident",
+          "protocol": "gqy-jsonrpc-v1",
+          "actions": ["list", "show", "match"],
+          "provides": [],
+          "requires": [],
+          "url": "https://github.com/GQYTeam/gqy-plugins/releases/download/v0.1.0/emote-pack-default-1.0.0.tar.gz",
+          "sha256": "f66f08d97c337e6e077570b06fe39f755e1587eb99d04b1f6d60930707a3993c",
+          "size": 14355403
+        }
+      ]
+    }
+  ]
 }

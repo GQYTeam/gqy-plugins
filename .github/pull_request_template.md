@@ -8,7 +8,7 @@
 
 ## 影响面
 
-- [ ] 行为 / 接口有变更（在下面写清兼容性）
+- [ ] 目录条目 / 安装行为有变更（写清 id、version、兼容性）
 - [ ] 只动文档、测试或 CI
 - [ ] 动了 `docs/` 与 `CHANGELOG.md`
 
@@ -20,9 +20,15 @@
 # 跑过的命令与结果
 ```
 
-## 检查项
+## 目录条目检查
+
+- [ ] 产物已上传到不可变 HTTPS Release 地址
+- [ ] `sha256` 与 `size` 是产物真实值，不是占位值
+- [ ] `version` 未被复用，`updated_at` 已更新
+- [ ] `go run ./cmd/gqy-plugin verify --registry registry.json --strict --artifacts` 通过
+
+## 基线检查
 
 - [ ] `make check` 或等价命令全绿
-- [ ] 没有提交密钥、令牌、生成物
-- [ ] `CHANGELOG.md` 已更新（行为有变时）
+- [ ] 没有提交密钥、令牌、构建产物、Release 二进制
 - [ ] 文档与代码一致

@@ -1,0 +1,70 @@
+name: 插件收录申请
+description: 申请把一个已发布产物加入官方在线目录
+title: "[Plugin] "
+labels: ["plugin-submission"]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        收录走 PR 评审。请先确认产物已经上传到不可变地址（优先 GitHub Release），并已算出 SHA-256。
+        不要把密钥、token 或用户数据贴进 issue。
+  - type: input
+    id: plugin-id
+    attributes:
+      label: 插件 id
+      description: 对应 manifest.json 的 id，匹配 `^[a-z0-9][a-z0-9_-]{0,31}$`。
+    validations:
+      required: true
+  - type: input
+    id: version
+    attributes:
+      label: 版本
+      description: 三位数字版本，如 1.0.0。
+    validations:
+      required: true
+  - type: input
+    id: source
+    attributes:
+      label: 来源仓库
+      description: 公开 HTTPS 仓库或主页。
+    validations:
+      required: true
+  - type: input
+    id: artifact
+    attributes:
+      label: 产物 URL
+      description: 不可变 `.tar.gz` 的 HTTPS 绝对地址。
+    validations:
+      required: true
+  - type: input
+    id: sha256
+    attributes:
+      label: SHA-256
+      description: 64 位小写十六进制。
+    validations:
+      required: true
+  - type: input
+    id: size
+    attributes:
+      label: 产物字节数
+      description: `stat -f%z` 或 `stat -c%s` 的结果。
+    validations:
+      required: true
+  - type: textarea
+    id: actions
+    attributes:
+      label: 动作与依赖
+      description: 列出 actions / provides / requires；说明是否需要额外运行时。
+    validations:
+      required: true
+  - type: checkboxes
+    id: checks
+    attributes:
+      label: 确认
+      options:
+        - label: 产物来自可信来源，且会随 PR 一起评审
+          required: true
+        - label: 我已用 `gqy-plugin verify --strict --artifacts` 或等价步骤验证
+          required: true
+        - label: 这不是安全漏洞报告（漏洞请走私密渠道）
+          required: true

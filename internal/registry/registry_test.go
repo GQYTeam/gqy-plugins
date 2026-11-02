@@ -65,10 +65,19 @@ func TestParseRepositoryRegistry(t *testing.T) {
 		t.Errorf("plugins 长度 = %d, 文件里是 %d", len(doc.Plugins), len(raw.Plugins))
 	}
 	if doc.Plugins == nil {
-		t.Fatal("plugins 为 nil，期望空数组（条目在插件产物发布后再追加）")
+		t.Fatal("plugins 为 nil，期望数组")
 	}
-	if len(doc.Plugins) != 0 {
-		t.Errorf("plugins 长度 = %d, 期望 0", len(doc.Plugins))
+	if len(doc.Plugins) < 2 {
+		t.Fatalf("plugins 长度 = %d，至少应收录两个官方插件", len(doc.Plugins))
+	}
+	seen := make(map[string]bool)
+	for _, p := range doc.Plugins {
+		seen[p.ID] = true
+	}
+	for _, id := range []string{"show-images-default", "emote-pack-default"} {
+		if seen[id] == false {
+			t.Errorf("registry.json 缺少官方插件 %s", id)
+		}
 	}
 }
 

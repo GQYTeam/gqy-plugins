@@ -1,0 +1,61 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="description" content="GQY 插件在线目录：浏览、搜索并用一条命令安装插件。">
+  <title>GQY Plugins · 插件目录</title>
+  <link rel="stylesheet" href="./styles.css">
+</head>
+<body>
+  <header class="hero">
+    <nav class="nav" aria-label="主导航">
+      <a class="brand" href="./">GQY <span>Plugins</span></a>
+      <div class="nav-links">
+        <a href="https://github.com/GQYTeam/gqy-plugins">GitHub</a>
+        <a href="https://github.com/GQYTeam/GQY">主仓库</a>
+        <a href="./registry.json">registry.json</a>
+      </div>
+    </nav>
+    <div class="hero-copy">
+      <p class="eyebrow">OFFICIAL PLUGIN CATALOG</p>
+      <h1>给 GQY 装上新的能力。</h1>
+      <p class="lede">在线目录是唯一事实来源。每个安装包都带 SHA-256，安装时先校验、再解包、最后原子落盘。</p>
+      <div class="quickstart">
+        <code>go run github.com/GQYTeam/gqy-plugins/cmd/gqy-plugin@latest install &lt;id&gt;</code>
+        <button type="button" data-copy="go run github.com/GQYTeam/gqy-plugins/cmd/gqy-plugin@latest install " aria-label="复制安装命令">复制</button>
+      </div>
+    </div>
+  </header>
+
+  <main>
+    <section class="toolbar" aria-label="目录筛选">
+      <label class="search">
+        <span>搜索</span>
+        <input id="search" type="search" placeholder="名称、标签、动作……" autocomplete="off">
+      </label>
+      <p id="count" class="count" aria-live="polite">正在读取目录…</p>
+    </section>
+
+    <section id="grid" class="grid" aria-label="插件列表"></section>
+    <p id="message" class="message" role="status"></p>
+
+    <section class="how">
+      <h2>安装之后</h2>
+      <ol>
+        <li>把插件放进 <code>$GQY_HOME/plugins/&lt;id&gt;/</code>。</li>
+        <li>让运行中的 GQY 重扫：<code>POST /api/plugins/reload</code>。</li>
+        <li>显式加载插件：<code>POST /api/plugins/&lt;id&gt;/load</code>。安装不等于自动执行。</li>
+      </ol>
+      <p>也可以加 <code>--server http://127.0.0.1:5173</code> 让 CLI 自动通知本机 GQY；加 <code>--load</code> 才会请求加载。</p>
+    </section>
+  </main>
+
+  <footer>
+    <p>GQYTeam · <span id="updated"></span></p>
+    <p>安装插件 = 信任它，请只装你信任的来源。详见 <a href="https://github.com/GQYTeam/gqy-plugins/blob/main/SECURITY.md">安全说明</a>。</p>
+  </footer>
+
+  <script src="./app.js" defer></script>
+</body>
+</html>

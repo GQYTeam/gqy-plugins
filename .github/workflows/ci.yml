@@ -36,8 +36,30 @@ jobs:
       - name: Vet
         run: go vet ./...
 
-      - name: Test
-        run: go test ./...
+      - name: Test with race detector
+        run: go test -race ./...
 
       - name: Build
         run: go build ./...
+
+      - name: Check website JavaScript
+        run: node --check web/app.js
+
+      - name: Verify registry (strict)
+        run: go run ./cmd/gqy-plugin verify --registry registry.json --strict
+
+  artifacts:
+    name: Verify release artifacts
+    runs-on: ubuntu-latest
+    needs: check
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Set up Go
+        uses: actions/setup-go@v5
+        with:
+          go-version: stable
+
+      - name: Download and verify every artifact
+        run: go run ./cmd/gqy-plugin verify --registry registry.json --strict --artifacts

@@ -1,130 +1,159 @@
 # gqy-plugins
 
 [![CI](https://github.com/GQYTeam/gqy-plugins/actions/workflows/ci.yml/badge.svg)](https://github.com/GQYTeam/gqy-plugins/actions/workflows/ci.yml)
+[![Pages](https://github.com/GQYTeam/gqy-plugins/actions/workflows/pages.yml/badge.svg)](https://gqyteam.github.io/gqy-plugins/)
 
 GQY 插件在线目录与 `gqy-plugin` CLI。
 
-本仓库做两件事：
+- **在线目录**：[gqyteam.github.io/gqy-plugins](https://gqyteam.github.io/gqy-plugins/)
+- **目录源文件**：[`registry.json`](registry.json)
+- **主程序**：[GQYTeam/GQY](https://github.com/GQYTeam/GQY)
 
-1. **插件在线目录的唯一事实来源**：仓库根的 [`registry.json`](registry.json) 是官方目录，静态站点与 `gqy-plugin` CLI 只读这一份数据，不再各自维护列表。
-2. **目录工具的 Go 实现**：`internal/registry` 负责读取与校验 `registry.json`（支持 https / `file://` / 本地路径三种来源）。
+目录是唯一事实来源。静态站点和 CLI 都读同一份 `registry.json`，每个安装包都带不可变 Release URL、SHA-256 与大小。
 
-> **当前状态**：目录格式、校验逻辑与 `registry.json` 空目录基线已落地；**目录条目暂时为空**——不预置占位条目，只登记真正发布过产物、带可下载地址与真实 sha256 的插件。
-> `gqy-plugin` CLI、安装器与静态站点**尚未实现**，见[路线图](#路线图)。
+## 快速开始
 
-`internal/registry.DefaultURL` 指向 `https://raw.githubusercontent.com/GQYTeam/gqy-plugins/main/registry.json`，即本仓库 `main` 分支根目录的这份文件。
+需要 Go 1.22+ 和 GQY 运行环境；官方插件自带 Node 运行时，Node 18+。
 
-## 目录结构
+```bash
+# 浏览
+go run github.com/GQYTeam/gqy-plugins/cmd/gqy-plugin@latest list
+go run github.com/GQYTeam/gqy-plugins/cmd/gqy-plugin@latest search 图片
+go run github.com/GQYTeam/gqy-plugins/cmd/gqy-plugin@latest info show-images-default
+
+# 安装到 $GQY_HOME/plugins/<id>/
+go run github.com/GQYTeam/gqy-plugins/cmd/gqy-plugin@latest install show-images-default
+
+# 让本机 GQY 重扫；只有显式 --load 才启动插件
+go run github.com/GQYTeam/gqy-plugins/cmd/gqy-plugin@latest install show-images-default \
+  --server http://127.0.0.1:5173 --load
+```
+
+也可以先安装 CLI：
+
+```bash
+go install github.com/GQYTeam/gqy-plugins/cmd/gqy-plugin@latest
+gqy-plugin install emote-pack-default
+```
+
+`GQY_HOME` 默认是 `~/.gqy`。安装后的下一步是 `POST /api/plugins/reload`，再 `POST /api/plugins/<id>/load`；CLI 的 `--server` 与 `--load` 只是帮你调用这两个接口。
+
+## 当前收录
+
+| 插件 | 版本 | 动作 | 产物 |
+| --- | --- | --- | --- |
+| `show-images-default` | 1.0.0 | `list` / `show` | [Release v0.1.0](https://github.com/GQYTeam/gqy-plugins/releases/tag/v0.1.0) |
+| `emote-pack-default` | 1.0.0 | `list` / `show` / `match` | [Release v0.1.0](https://github.com/GQYTeam/gqy-plugins/releases/tag/v0.1.0) |
+
+新增条目必须先有真实可下载产物，再登记真实 `sha256` 与 `size`；禁止占位值。流程见下文。
+
+## 安装语义
+
+`gqy-plugin install` 固定执行：
+
+1. 读取目录，解析 `id@version`；未写版本时选最新非 `yanked` 版本。
+2. 下载 `.tar.gz`，边下边算 SHA-256，并核对目录登记的大小。
+3. 拒绝路径穿越、绝对路径、符号链接、设备文件、超大解包。
+4. 校验包根 `manifest.json` 的 `id`、`version`、`mode` 与 `protocol`。
+5. 在 `$GQY_HOME/plugins/` 内 staging，最后原子 rename 到 `<id>/`；`--force` 覆盖时先备份，失败回滚。
+
+```bash
+gqy-plugin install emote-pack-default --dry-run     # 只下载校验，不落盘
+gqy-plugin install emote-pack-default --force       # 覆盖已安装目录
+gqy-plugin install emote-pack-default --json
+```
+
+默认**不自动加载**。安装插件 = 信任它：插件以 GQY 进程同等权限运行，能读、能写、能联网。SHA-256 只保证传输完整，不提供代码签名或沙箱。
+
+## 目录格式
+
+```json
+{
+  "schema_version": 1,
+  "updated_at": "2026-11-02T21:25:00+08:00",
+  "plugins": [
+    {
+      "id": "show-images-default",
+      "name": "图片展示示例",
+      "summary": "一句话简介",
+      "tags": ["图片"],
+      "versions": [
+        {
+          "version": "1.0.0",
+          "mode": "resident",
+          "protocol": "gqy-jsonrpc-v1",
+          "actions": ["list", "show"],
+          "url": "https://github.com/GQYTeam/gqy-plugins/releases/download/v0.1.0/show-images-default-1.0.0.tar.gz",
+          "sha256": "64 位小写十六进制",
+          "size": 31375314
+        }
+      ]
+    }
+  ]
+}
+```
+
+完整字段、版本选择与 strict 规则见 [`docs/reference/registry-schema.md`](docs/reference/registry-schema.md)。
+
+## 校验与发布
+
+```bash
+make check
+gqy-plugin verify --strict                 # 只校验目录元数据
+gqy-plugin verify --artifacts              # 逐一下载产物，核对哈希、大小与 manifest
+gqy-plugin package ./my-plugin --output dist/my-plugin-1.0.0.tar.gz
+```
+
+打包器是确定性的：路径排序、固定时间戳与 uid/gid、权限归一。输出 JSON 包含真实 `sha256` 与 `size`，直接用于目录条目。
+
+发布一个新版本：
+
+1. 在插件仓库完成自检并打 tag。
+2. 用 `gqy-plugin package` 生成 `.tar.gz`，把产物上传到本仓库的 GitHub Release。
+3. 在 `registry.json` 增加 `version` 条目，填真实 URL、SHA-256、大小、协议与动作。
+4. 更新 `updated_at`，提 PR；CI 会跑 strict 校验，合并后再跑产物下载校验。
+5. 下载产物并逐项验证：
+
+```bash
+gqy-plugin verify --strict --artifacts
+```
+
+## 仓库结构
 
 ```text
 .
-├── registry.json                 # 官方插件目录（唯一事实来源）
-├── internal/registry/            # 目录读取与校验
-│   ├── registry.go               # Load / Parse / Validate / ResolveURL
-│   └── registry_test.go          # 读生产目录文件 + 各类拒绝路径
-├── docs/                         # 文档索引（见 docs/README.md）
-├── .github/                      # CI、Issue / PR 模板、dependabot
-├── Makefile                      # make check = gofmt + vet + test + build
-├── .golangci.yml                 # golangci-lint v2 配置（本地可选）
-├── go.mod                        # module github.com/GQYTeam/gqy-plugins（go 1.22）
-└── LICENSE / NOTICE / README.md / CONTRIBUTING.md / SECURITY.md / CHANGELOG.md
+├── registry.json              # 在线目录唯一事实来源
+├── cmd/gqy-plugin/            # CLI 子命令
+├── internal/registry/         # 目录读取、校验、版本解析
+├── internal/manifest/         # 包内 manifest 校验
+├── internal/archive/          # 确定性打包、安全解包
+├── internal/install/          # 下载、SHA-256、原子安装
+├── internal/gqyapi/           # 可选 reload / load 通知
+├── web/                       # 零构建静态目录站
+├── docs/                      # designs / blueprint / construction / reference
+└── .github/                   # CI、Pages、Issue / PR 模板
 ```
 
-`cmd/`（CLI）、`internal/install`（下载安装）、`web/`（静态站点）尚未开工，所以没有对应目录，规划见路线图。
-
-## registry.json schema
-
-顶层 `Document`：
-
-| 字段 | 类型 | 必填 | 说明 |
-| --- | --- | --- | --- |
-| `schema_version` | int | 是 | 目录格式版本，当前固定为 `1`（`SchemaVersion`） |
-| `updated_at` | string | 是 | RFC3339 时间戳，目录最后一次更新时间 |
-| `plugins` | array | 是 | 插件条目数组，暂时为空也要写 `[]`，不能省略 |
-| `base` | — | — | 运行时字段（Go 里小写、不参与 JSON），由 `Load` / `ParseJSON` 记下来源目录，供 `ResolveURL` 解析相对地址 |
-
-`plugins[]`（`Plugin`）：
-
-| 字段 | 类型 | 必填 | 说明 |
-| --- | --- | --- | --- |
-| `id` | string | 是 | 插件唯一标识，匹配 `^[a-z0-9][a-z0-9_-]{0,31}$`，全目录唯一 |
-| `name` | string | 是 | 展示名，非空 |
-| `summary` | string | 是 | 一句话简介，非空 |
-| `description` | string | 否 | 长描述 |
-| `homepage` | string | 否 | 插件主页，http(s) 绝对地址 |
-| `tags` | string[] | 否 | 分类标签，元素非空 |
-| `versions` | array | 是 | 版本列表，至少一项；版本号在同一插件内唯一 |
-
-`plugins[].versions[]`（`Version`）：
-
-| 字段 | 类型 | 必填 | 说明 |
-| --- | --- | --- | --- |
-| `version` | string | 是 | 匹配 `^\d{1,4}\.\d{1,4}\.\d{1,4}$`，如 `1.0.0` |
-| `channel` | string | 否 | 渠道标记（如 `stable` / `beta`），自由文本 |
-| `published_at` | string | 否 | RFC3339 时间戳 |
-| `mode` | string | 否 | 插件运行模式标记，自由文本 |
-| `protocol` | string | 否 | 插件协议版本标记，自由文本 |
-| `actions` | string[] | 否 | 可执行动作列表，元素非空 |
-| `provides` | string[] | 否 | 提供的能力列表，元素非空 |
-| `requires` | string[] | 否 | 依赖的能力列表，元素非空 |
-| `url` | string | 是 | 产物下载地址；默认（非 strict）允许相对地址与 http(s) 绝对地址 |
-| `sha256` | string | 是 | 产物 sha256，匹配 `^[a-f0-9]{64}$`（64 位小写十六进制） |
-| `size` | int64 | 否 | 产物体积（字节），不能为负 |
-| `yanked` | bool | 否 | 标记该版本已撤回；保留历史记录，不从数组里删 |
-
-### 校验规则
-
-`Parse` / `Load` 会做过 `Validate(false)`，发布目录可以用 `Validate(true)` 走 strict 模式：
-
-- **未知字段直接拒绝**（`DisallowUnknownFields`）：字段名拼错不会被静默忽略，解析即报错。
-- 顶层 `schema_version` 必须等于 `1`；`updated_at` 与 `published_at` 必须是 RFC3339；`plugins` 必须是数组。
-- 插件 `id` 必须匹配 `^[a-z0-9][a-z0-9_-]{0,31}$`，且**全目录唯一**；`name`、`summary` 不能为空。
-- `homepage` 若填写必须是 http(s) 绝对地址；`tags` 元素不能为空字符串。
-- 每个插件至少一个版本；`version` 必须匹配 `^\d{1,4}\.\d{1,4}\.\d{1,4}$`，同一插件内**版本号唯一**。
-- `url` 不能为空；strict 模式只接受 **https 绝对地址**（非 strict 允许 `http(s)` 绝对地址或相对地址，相对地址按目录来源解析）。
-- `sha256` 必须是 64 位小写十六进制；`size` 不能为负；`actions` / `provides` / `requires` 元素不能为空字符串。
-- 上述规则的真实实现见 [`internal/registry/registry.go`](internal/registry/registry.go)，文档与其不一致时以代码为准，并顺手更正本文。
-
-## 本地验收
+## 开发
 
 ```bash
-make check   # gofmt 检查 + go vet ./... + go test ./... + go build ./...
+make check        # gofmt + vet + test + build + web 语法 + strict 目录校验
+make test
+make build        # dist/gqy-plugin
+make package      # 重新打包两个官方插件
+make clean
 ```
 
-其它目标：
+CI 在 Linux 上跑 Go 1.22 与 stable 矩阵，并额外下载 Release 产物做完整性验证。Pages 只发布 `web/` 与根 `registry.json`。
 
-| 目标 | 作用 |
-| --- | --- |
-| `make fmt` | `gofmt -w .` 格式化全部 Go 代码 |
-| `make vet` | `go vet ./...` |
-| `make test` | `go test ./...` |
-| `make build` | `go build ./...` |
-| `make tidy` | `go mod tidy` |
-| `make clean` | 清理 `dist/`、`coverage.out` |
-| `make help` | 列出全部目标 |
+## 文档
 
-CI（[`.github/workflows/ci.yml`](.github/workflows/ci.yml)）在 `push: main` 与 PR 上跑：Go `1.22.x` + `stable` 矩阵，依次检查 gofmt、`go vet`、`go test`、`go build`。
-
-## 新增插件条目
-
-目录**不预置占位数据**。追加条目的前提是插件产物真的已经发布：
-
-1. 插件产物（zip / tar）发布到可公开下载的 **https** 地址；
-2. 对产物算真实 sha256（例：`shasum -a 256 gqy-plugins-<Name>-default-1.0.0.zip`），记下字节数；
-3. 在 `registry.json` 的 `plugins` 里追加条目，`url` / `sha256` / `size` 填**真实值**；
-4. 把 `updated_at` 更新为当前 RFC3339 时间；
-5. 跑 `make check`（测试会读仓库根 `registry.json` 做真实校验），然后按 [`CONTRIBUTING.md`](CONTRIBUTING.md) 提 PR，走一次评审合入。
-
-> 禁止为了占位写假 `url`、假 `sha256`、假 `size`；没有可下载产物就不加条目。
-
-## 路线图
-
-- [x] 目录格式与校验（`internal/registry`：`Load` / `Parse` / `Validate` / `ResolveURL`）
-- [x] `registry.json` 空目录基线 + `make check` + CI
-- [ ] `gqy-plugin` CLI：`search` / `list` / `install` / `update` / `remove`（未实现，开工时新建 `cmd/gqy-plugin/`）
-- [ ] `internal/install`：下载、sha256 校验、安装落盘（未实现）
-- [ ] 静态站点 `web/`：渲染目录、搜索与安装指引（未实现）
-- [ ] 目录签名与镜像源（未开始，先解决可信来源问题）
+- 设计与决策：[`docs/designs/01-在线收录与安装.md`](docs/designs/01-在线收录与安装.md)
+- 目录蓝图：[`docs/blueprint/registry.md`](docs/blueprint/registry.md)
+- 安装器蓝图：[`docs/blueprint/installer.md`](docs/blueprint/installer.md)
+- 静态站蓝图：[`docs/blueprint/site.md`](docs/blueprint/site.md)
+- 协议参考：[`docs/reference/registry-schema.md`](docs/reference/registry-schema.md)
+- 施工留底：[`docs/construction/001-在线收录与安装仓库.md`](docs/construction/001-在线收录与安装仓库.md)
 
 ## 许可与署名
 
@@ -133,17 +162,9 @@ CI（[`.github/workflows/ci.yml`](.github/workflows/ci.yml)）在 `push: main` �
 - **禁止商用**：生产、部署、售卖、SaaS、内置于商业产品等任何商业目的的使用都不在授权范围内。
 - **必须署名**：fork、二次开发、借鉴本仓库的代码 / 文档 / 设计，都必须标注来源与原作者，并原样保留 `LICENSE` 与 `NOTICE`。
 
-衍生项目请在 README（或同等声明文件）里原样写清：
-
 ```text
 来源项目：GQYTeam/gqy-plugins
 项目地址：https://github.com/GQYTeam/gqy-plugins
 原作者：GQYTeam
 许可证：PolyForm Noncommercial License 1.0.0
 ```
-
-本仓库目前只依赖 Go 标准库，无第三方代码或素材；一旦引入，按组织标准把许可与出处记在 `docs/third-party/`。
-
-## 相关文档
-
-[`docs/README.md`](docs/README.md) · [`CONTRIBUTING.md`](CONTRIBUTING.md) · [`SECURITY.md`](SECURITY.md) · [`CHANGELOG.md`](CHANGELOG.md)

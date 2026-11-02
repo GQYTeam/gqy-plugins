@@ -13,7 +13,7 @@ GQY 插件在线目录与 `gqy-plugin` CLI。
 
 ## 快速开始
 
-需要 Go 1.22+ 和 GQY 运行环境；官方插件自带 Node 运行时，Node 18+。
+需要 Go 1.22+ 和 GQY 运行环境；当前官方插件还需要 Node 18+。
 
 ```bash
 # 浏览

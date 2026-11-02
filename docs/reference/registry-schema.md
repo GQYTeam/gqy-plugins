@@ -57,6 +57,8 @@
 - `version`：`^\d{1,4}\.\d{1,4}\.\d{1,4}$`。
 - `mode`：`resident` / `oneshot`；安装 CLI 只接受 resident。
 - `protocol`：`gqy-jsonrpc-v1` / `mcp` / `unix` / `tcp`。
+- `actions`：元素匹配 `^[a-zA-Z][a-zA-Z0-9_-]{0,63}$`。
+- `provides` / `requires`：元素匹配 `^[a-z][a-z0-9_.-]{0,63}$`。
 - `url`：非空；strict 模式必须为 HTTPS 绝对地址。
 - `sha256`：64 位小写十六进制。
 - `size`：非负整数；大于 0 时安装器严格比对下载字节数。

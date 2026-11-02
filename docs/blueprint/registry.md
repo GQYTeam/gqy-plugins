@@ -52,8 +52,8 @@
 | `published_at` | 否 | RFC3339 |
 | `mode` | 否 | `resident` / `oneshot`；`install` 拒绝 oneshot |
 | `protocol` | 否 | `gqy-jsonrpc-v1` / `mcp` / `unix` / `tcp` |
-| `actions` | 否 | 动作名数组，元素非空 |
-| `provides` / `requires` | 否 | 服务名数组，元素非空 |
+| `actions` | 否 | 动作名数组，元素匹配 `^[a-zA-Z][a-zA-Z0-9_-]{0,63}$` |
+| `provides` / `requires` | 否 | 服务名数组，元素匹配 `^[a-z][a-z0-9_.-]{0,63}$` |
 | `url` | 是 | 产物地址；默认相对或 http(s)，strict 只接受 https 绝对地址 |
 | `sha256` | 是 | 64 位小写十六进制 |
 | `size` | 否 | 字节数，大于等于 0，可被安装器严格比对 |

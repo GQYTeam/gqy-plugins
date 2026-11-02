@@ -42,9 +42,7 @@
       "homepage": "https://github.com/GQYTeam/gqy-plugins-GitHubAccount-default",
       "source_type": "org",
       "repository": "https://github.com/GQYTeam/gqy-plugins-GitHubAccount-default",
-      "tags": [
-        "组织内"
-      ],
+      "tags": [],
       "versions": [
         {
           "version": "1.0.0",

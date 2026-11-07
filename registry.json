@@ -1,6 +1,6 @@
 {
   "schema_version": 1,
-  "updated_at": "2026-11-06T19:27:10Z",
+  "updated_at": "2026-11-07T06:02:26Z",
   "plugins": [
     {
       "id": "emote-pack-default",
@@ -20,7 +20,7 @@
         {
           "version": "1.2.0",
           "channel": "stable",
-          "published_at": "2026-11-06T19:27:10Z",
+          "published_at": "2026-11-07T06:02:26Z",
           "mode": "resident",
           "protocol": "gqy-jsonrpc-v1",
           "actions": [
